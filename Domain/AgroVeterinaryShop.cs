@@ -6,7 +6,14 @@ using System.Threading.Tasks;
 
 namespace Domain
 {
-    internal class Class1
+    public class AgroVeterinaryShop
     {
+        public int ShopId { get; set; }
+        public string ShopName { get; set; }
+        public string RegistrationDetails { get; set; }
+        public string AuthorizedProducts { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
+
 }
