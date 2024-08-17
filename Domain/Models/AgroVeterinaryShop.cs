@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain
+namespace Domain.Models
 {
-    public class FeedBusinessOperator
+    public class AgroVeterinaryShop
     {
-        public int OperatorId { get; set; }
-        public string BusinessName { get; set; }
+        public int ShopId { get; set; }
+        public string ShopName { get; set; }
         public string RegistrationDetails { get; set; }
-        public string ComplianceStatus { get; set; }
+        public string AuthorizedProducts { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

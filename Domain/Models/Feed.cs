@@ -4,18 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain
+namespace Domain.Models
 {
-    public class FeedTransaction
+    public class Feed
     {
-        public int TransactionId { get; set; }
         public int FeedId { get; set; }
-        public DateTime TransactionDate { get; set; }
-        public decimal Quantity { get; set; }
-        public string TransactionType { get; set; } // e.g., Purchase, Sale
+        public string FeedName { get; set; }
+        public string FeedType { get; set; }
+        public DateTime ManufactureDate { get; set; }
+        public DateTime ExpiryDate { get; set; }
+        public string Supplier { get; set; }
         public string Details { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
-
 }

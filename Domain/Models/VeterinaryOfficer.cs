@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain
+namespace Domain.Models
 {
-    public class Transporter
+    public class VeterinaryOfficer
     {
-        public int TransporterId { get; set; }
+        public int OfficerId { get; set; }
         public string Name { get; set; }
         public string ContactDetails { get; set; }
-        public string VehicleDetails { get; set; }
-        public string ComplianceStatus { get; set; }
+        public string Role { get; set; } // e.g., Inspector, Regulator
     }
 
 }

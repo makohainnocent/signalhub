@@ -4,15 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain
+namespace Domain.Models
 {
-    public class Farm
+    public class Notification
     {
-        public int FarmId { get; set; }
+        public int NotificationId { get; set; }
         public int UserId { get; set; }
-        public string FarmName { get; set; }
-        public string Location { get; set; }
-        public decimal Area { get; set; } // in acres
+        public string Message { get; set; }
+        public DateTime Date { get; set; }
+        public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
