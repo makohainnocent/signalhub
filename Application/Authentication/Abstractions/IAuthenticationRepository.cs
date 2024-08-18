@@ -11,7 +11,16 @@ namespace Application.Authentication.Abstractions
     public interface IAuthenticationRepository
     {
        
-         Task<User> CreateUser(UserRegistrationRequest request);
-        
+        Task<User> CreateUser(UserRegistrationRequest request);
+
+        Task<User> LoginUser(UserLoginRequest request);
+
+        Task<IEnumerable<Role>> GetRolesByUserIdAsync(int userId);
+
+        Task<IEnumerable<Claim>> GetClaimsByUserIdAsync(int userId);
+
+        Task<User> GetUserByIdAsync(int userId);
+
+
     }
 }

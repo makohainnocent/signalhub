@@ -22,5 +22,14 @@ namespace DataAccess.Common.Utilities
                 return builder.ToString();
             }
         }
+
+        public static bool VerifyHashedPassword(string hashedPassword, string password)
+        {
+           
+            var hashedInputPassword = HashPassword(password);
+
+            
+            return hashedInputPassword.Equals(hashedPassword, StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

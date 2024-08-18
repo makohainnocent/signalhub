@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using Asp.Versioning.Builder;
 using Asp.Versioning;
+using DataAccess.Authentication.Utilities;
 
 namespace Api.Authentication.EndPointDefinitions
 {
@@ -33,8 +34,17 @@ namespace Api.Authentication.EndPointDefinitions
                 {
                     return await AuthenticationControllers.CreateUser(repo, request);
                 })
-                .AddEndpointFilter<ValidationFilter<UserRegistrationRequest>>();
-            }
+                .AddEndpointFilter<ValidationFilter<UserRegistrationRequest>>()
+                .AllowAnonymous();
+
+
+                app.MapPost("/login", async (IAuthenticationRepository repo, [FromBody] UserLoginRequest request, TokenService tokenService) =>
+                {
+                    return await AuthenticationControllers.LoginUser(repo, request, tokenService);
+                })
+                .AddEndpointFilter<ValidationFilter<UserLoginRequest>>()
+                .AllowAnonymous();
+        }
         }
     
 }

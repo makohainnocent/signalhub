@@ -21,7 +21,8 @@ if (app.Environment.IsDevelopment())
 
 app.RegisterEndpointdefinitions();
 
-
+app.UseAuthentication();
+app.UseAuthorization();
 
 
 using var scope = app.Services.CreateScope();

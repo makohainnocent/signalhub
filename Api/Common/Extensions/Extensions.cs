@@ -12,6 +12,10 @@ using Domain.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using Domain.Authentication.Requests;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using DataAccess.Authentication.Utilities;
 
 
 
@@ -47,9 +51,9 @@ namespace Api.Common.Extensions
             //builder.Services.AddScoped<IValidator<UserRegistrationRequest>, UserRegistrationValidator>();
 
             // Register all validators in the current assembly
-            //builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-            builder.Services.AddScoped<IValidator<UserRegistrationRequest>, UserRegistrationValidator>();
+            //builder.Services.AddScoped<IValidator<UserRegistrationRequest>, UserRegistrationValidator>();
             builder.Services.AddScoped(typeof(ValidationFilter<>));
 
             builder.Services.AddApiVersioning(options =>
@@ -63,6 +67,34 @@ namespace Api.Common.Extensions
                 options.GroupNameFormat = "'v'V";
                 options.SubstituteApiVersionInUrl= true;
             });
+
+            var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwtSettings["Issuer"],
+                        ValidAudience = jwtSettings["Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]))
+                    };
+                });
+
+            builder.Services.AddAuthorization();
+
+            
+            var secretKey = jwtSettings["SecretKey"];
+            var issuer = jwtSettings["Issuer"];
+            var audience = jwtSettings["Audience"];
+
+            builder.Services.AddScoped<TokenService>(provider =>
+                new TokenService(secretKey, issuer, audience, provider.GetRequiredService<IAuthenticationRepository>()));
         }
 
         public static void RegisterEndpointdefinitions(this WebApplication app)

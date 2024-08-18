@@ -85,6 +85,100 @@ namespace DataAccess.Authentication.Repositories
             }
         }
 
+        public async Task<User> LoginUser(UserLoginRequest request)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                var query = @"
+            SELECT UserId, Username, HashedPassword, Email, FullName, Address, CreatedAt, LastLoginAt
+            FROM [User]
+            WHERE Username = @UsernameOrEmail OR Email = @UsernameOrEmail";
+
+                
+                var user = await connection.QuerySingleOrDefaultAsync<User>(query, new { UsernameOrEmail = request.UsernameOrEmail });
+
+                
+                if (user == null)
+                {
+                    throw new InvalidOperationException("Invalid username or email.");
+                }
+
+                
+                bool isPasswordValid = PasswordHasher.VerifyHashedPassword(user.HashedPassword, request.Password);
+
+                
+                if (!isPasswordValid)
+                {
+                    throw new InvalidOperationException("Invalid password.");
+                }
+
+                
+                var updateQuery = @"
+            UPDATE [User]
+            SET LastLoginAt = @LastLoginAt
+            WHERE UserId = @UserId";
+
+                await connection.ExecuteAsync(updateQuery, new { LastLoginAt = DateTime.UtcNow, UserId = user.UserId });
+
+                
+                return user;
+            }
+        }
+
+        public async Task<IEnumerable<Role>> GetRolesByUserIdAsync(int userId)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = @"
+                    SELECT r.RoleId, r.RoleName
+                    FROM Roles r
+                    INNER JOIN UserRoles ur ON r.RoleId = ur.RoleId
+                    WHERE ur.UserId = @UserId";
+
+                return await connection.QueryAsync<Role>(query, new { UserId = userId });
+            }
+            
+        }
+
+
+        public async Task<IEnumerable<Claim>> GetClaimsByUserIdAsync(int userId)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = @"
+                    SELECT DISTINCT c.ClaimId, c.ClaimType, c.ClaimValue
+                    FROM Claims c
+                    INNER JOIN UserClaims uc ON c.ClaimId = uc.ClaimId
+                    WHERE uc.UserId = @UserId
+
+                    UNION
+
+                    SELECT DISTINCT c.ClaimId, c.ClaimType, c.ClaimValue
+                    FROM Claims c
+                    INNER JOIN RoleClaims rc ON c.ClaimId = rc.ClaimId
+                    INNER JOIN UserRoles ur ON rc.RoleId = ur.RoleId
+                    WHERE ur.UserId = @UserId";
+
+                return await connection.QueryAsync<Claim>(query, new { UserId = userId });
+            }
+                
+        }
+
+        public async Task<User> GetUserByIdAsync(int userId)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = @"
+                    SELECT UserId, Username, HashedPassword, Email, FullName, Address, CreatedAt, LastLoginAt
+                    FROM [User]
+                    WHERE UserId = @UserId";
+
+                    return await connection.QuerySingleOrDefaultAsync<User>(query, new { UserId = userId });
+            }
+                
+        }
 
 
     }
