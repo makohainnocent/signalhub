@@ -1,4 +1,6 @@
 using Api.Common.Extensions;
+using Asp.Versioning;
+using Asp.Versioning.Builder;
 using FluentMigrator.Runner;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +20,8 @@ if (app.Environment.IsDevelopment())
 
 
 app.RegisterEndpointdefinitions();
+
+
 
 
 using var scope = app.Services.CreateScope();

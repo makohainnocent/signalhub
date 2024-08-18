@@ -11,6 +11,7 @@ using Api.Authentication.Validators;
 using Domain.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using Domain.Authentication.Requests;
+using Asp.Versioning;
 
 
 
@@ -50,6 +51,18 @@ namespace Api.Common.Extensions
 
             builder.Services.AddScoped<IValidator<UserRegistrationRequest>, UserRegistrationValidator>();
             builder.Services.AddScoped(typeof(ValidationFilter<>));
+
+            builder.Services.AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1);
+                options.ApiVersionReader = new UrlSegmentApiVersionReader();
+
+
+            }).AddApiExplorer(options=>
+            {
+                options.GroupNameFormat = "'v'V";
+                options.SubstituteApiVersionInUrl= true;
+            });
         }
 
         public static void RegisterEndpointdefinitions(this WebApplication app)
