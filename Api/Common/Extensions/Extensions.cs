@@ -1,11 +1,18 @@
 ﻿using Api.Common.Abstractions;
-using Api.Filters;
-//using Api.Middlewares;
-using Application.Abstractions;
-using DataAccess.DbConnection;
+using Application.Common.Abstractions;
+using DataAccess.Common.DbConnection;
 using FluentMigrator.Runner;
 using System.Reflection;
-//using DataAccess.Repositories;
+using FluentValidation;
+using Application.Authentication.Abstractions;
+using DataAccess.Authentication.Repositories;
+using Api.Common.Filters;
+using Api.Authentication.Validators;
+using Domain.Core.Models;
+using Microsoft.AspNetCore.Identity;
+using Domain.Authentication.Requests;
+
+
 
 namespace Api.Common.Extensions
 {
@@ -25,9 +32,24 @@ namespace Api.Common.Extensions
                     .ScanIn(Assembly.Load("DataAccess")).For.Migrations())
 
                     .AddLogging(config => config.AddFluentMigratorConsole());
-            //builder.Services.AddTransient<ICandidateRepository, CandidateRepository>();
+            builder.Services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
 
-            //builder.Services.AddScoped<CandidateValidationFilter>();
+
+
+
+
+            //builder.Services.AddValidatorsFromAssemblyContaining<UserRegistrationValidator>();
+            //builder.Services.AddValidatorsFromAssembly(Assembly.Load("Api"));
+            //builder.Services.AddValidatorsFromAssembly(Assembly.Load("Domain"));
+            //builder.Services.AddValidatorsFromAssembly(Assembly.Load("Application"));
+            //builder.Services.AddValidatorsFromAssembly(Assembly.Load("DataAccess"));
+            //builder.Services.AddScoped<IValidator<UserRegistrationRequest>, UserRegistrationValidator>();
+
+            // Register all validators in the current assembly
+            //builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+            builder.Services.AddScoped<IValidator<UserRegistrationRequest>, UserRegistrationValidator>();
+            builder.Services.AddScoped(typeof(ValidationFilter<>));
         }
 
         public static void RegisterEndpointdefinitions(this WebApplication app)

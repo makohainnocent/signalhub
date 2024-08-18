@@ -1,9 +1,6 @@
 ﻿using Api.Common.Abstractions;
-using Application.Abstractions;
-using Domain.Models;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+
+
 
 namespace Api.Authentication.EndPointDefinitions
 {
