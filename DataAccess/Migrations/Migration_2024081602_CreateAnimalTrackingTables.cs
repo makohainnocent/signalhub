@@ -1,7 +1,7 @@
 ﻿using FluentMigrator;
 
 [Migration(2024081602)]
-public class Migration_2024081601_CreateAnimalTrackingTables : Migration
+public class Migration_2024081602_CreateAnimalTrackingTables : Migration
 {
     public override void Up()
     {

@@ -1,4 +1,4 @@
-﻿using Api.Abstractions;
+﻿using Api.Common.Abstractions;
 using Api.Filters;
 //using Api.Middlewares;
 using Application.Abstractions;
@@ -7,7 +7,7 @@ using FluentMigrator.Runner;
 using System.Reflection;
 //using DataAccess.Repositories;
 
-namespace Api.Extensions
+namespace Api.Common.Extensions
 {
     public static class Extensions
     {
@@ -23,8 +23,8 @@ namespace Api.Extensions
                     .WithGlobalConnectionString(configuration.GetConnectionString("sqlServerConnectionString"))
                     .ScanIn(Assembly.GetExecutingAssembly()).For.All()
                     .ScanIn(Assembly.Load("DataAccess")).For.Migrations())
-                    
-                    .AddLogging(config=>config.AddFluentMigratorConsole());
+
+                    .AddLogging(config => config.AddFluentMigratorConsole());
             //builder.Services.AddTransient<ICandidateRepository, CandidateRepository>();
 
             //builder.Services.AddScoped<CandidateValidationFilter>();
@@ -38,7 +38,7 @@ namespace Api.Extensions
                 .Select(Activator.CreateInstance)
                 .Cast<IEndpointDefinition>();
 
-            foreach(var endpoints in endpointdefs)
+            foreach (var endpoints in endpointdefs)
             {
                 endpoints.RegisterEndpoints(app);
             }

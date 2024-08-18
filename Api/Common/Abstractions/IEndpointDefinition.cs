@@ -1,4 +1,4 @@
-﻿namespace Api.Abstractions
+﻿namespace Api.Common.Abstractions
 {
     public interface IEndpointDefinition
     {

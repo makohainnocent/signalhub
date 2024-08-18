@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
-namespace Api.Filters
+namespace Api.Common.Filters
 {
     /*public class CandidateValidationFilter : IEndpointFilter
     {
