@@ -17,6 +17,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DataAccess.Authentication.Utilities;
 using Api.Core.MiddleWares;
+using Serilog;
 
 
 
@@ -96,6 +97,10 @@ namespace Api.Core.Extensions
 
             builder.Services.AddScoped(provider =>
                 new TokenService(secretKey, issuer, audience, provider.GetRequiredService<IAuthenticationRepository>()));
+            
+            builder.Services.AddSerilog();
+            
+
         }
 
         public static void RegisterEndpointdefinitions(this WebApplication app)

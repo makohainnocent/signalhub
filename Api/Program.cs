@@ -3,50 +3,72 @@ using Asp.Versioning;
 using Asp.Versioning.Builder;
 using FluentMigrator.Runner;
 using Api.Core.MiddleWares;
-
-var builder = WebApplication.CreateBuilder(args);
-builder.RegisterServices(builder.Configuration);
-
-
-var app = builder.Build();
+using Serilog;
 
 
 
-if (app.Environment.IsDevelopment())
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
+
+Log.Information("Starting up");
+
+try
 {
     
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var builder = WebApplication.CreateBuilder(args);
 
-    using var scope = app.Services.CreateScope();
-    try
+    
+    builder.RegisterServices(builder.Configuration);
+
+    
+    var app = builder.Build();
+
+    
+    if (app.Environment.IsDevelopment())
     {
-        var migrator = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+        
+        app.UseSwagger();
+        app.UseSwaggerUI();
 
-        migrator.MigrateUp();
-        //migrator.MigrateDown(2024081602);
+        using var scope = app.Services.CreateScope();
+        try
+        {
+            var migrator = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+            migrator.MigrateUp();
+            // migrator.MigrateDown(2024081602);
+        }
+        catch (Exception ex)
+        {
+            
+            Log.Error(ex, "An error occurred while listing migrations");
+        }
     }
-    catch (Exception ex)
+    else
     {
-
-        Console.WriteLine($"An error occurred while listing migrations");
+        app.UseExceptionHandlingMiddleware();
     }
 
+   
+    app.RegisterEndpointdefinitions();
+
+    
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    
+    app.UseSerilogRequestLogging();
+
+    
+    app.Run();
 }
-else
+catch (Exception ex)
 {
-    app.UseExceptionHandlingMiddleware();
+    
+    Log.Fatal(ex, "An error occurred during application startup");
 }
-
-
-app.RegisterEndpointdefinitions();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-
-
-
-app.Run();
-
-public partial class Program { }
+finally
+{
+    
+    Log.CloseAndFlush();
+}

@@ -14,6 +14,7 @@ using DataAccess.Common.Utilities;
 using System.Security.Authentication;
 using DataAccess.Authentication.Exceptions;
 
+
 namespace DataAccess.Authentication.Repositories
 {
     public class AuthenticationRepository : IAuthenticationRepository
@@ -71,7 +72,7 @@ namespace DataAccess.Authentication.Repositories
 
                 // Execute the query and get the new user's ID
                 var userId = await connection.QuerySingleAsync<int>(insertQuery, parameters);
-
+               
                 // Return the created user
                 return new User
                 {
