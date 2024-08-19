@@ -20,6 +20,7 @@ using Api.Core.MiddleWares;
 using Serilog;
 using Api.Core.Services;
 using System.Configuration;
+using Microsoft.OpenApi.Models;
 
 
 
@@ -31,7 +32,37 @@ namespace Api.Core.Extensions
         public static void RegisterServices(this WebApplicationBuilder builder, IConfiguration configuration)
         {
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+
+                // Configure Swagger to use the Authorization header
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter JWT with Bearer into field",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    BearerFormat = "JWT",
+                    Scheme = "Bearer"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new string[] { }
+            }
+        });
+            });
+            //builder.Services.AddSwaggerGen();
             builder.Services.AddSingleton<IDbConnectionProvider, DbConnection>();
             builder.Services.AddFluentMigratorCore()
                 .ConfigureRunner(config =>

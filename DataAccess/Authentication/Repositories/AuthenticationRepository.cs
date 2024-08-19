@@ -264,8 +264,8 @@ namespace DataAccess.Authentication.Repositories
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
                 const string query = @"
-                UPDATE Users
-                SET PasswordHash = @PasswordHash
+                UPDATE [User]
+                SET HashedPassword = @PasswordHash
                 WHERE Email = @Email";
 
                 var parameters = new
@@ -275,6 +275,26 @@ namespace DataAccess.Authentication.Repositories
                 };
 
                 await connection.ExecuteAsync(query, parameters);
+            }
+        }
+
+        public async Task<bool> ValidatePassword(string email, string password)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = @"
+                SELECT HashedPassword
+                FROM [User]
+                WHERE Email = @Email";
+
+                var storedPasswordHash = await connection.QuerySingleOrDefaultAsync<string>(query, new { Email = email });
+
+                if (storedPasswordHash == null)
+                {
+                    return false;
+                }
+
+                return PasswordHasher.VerifyHashedPassword(storedPasswordHash, password);
             }
         }
 

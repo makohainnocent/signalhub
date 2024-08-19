@@ -125,7 +125,7 @@ namespace Api.Authentication.Controllers
             {
                 Log.Information("Attempting to reset password for email: {Email}", request.Email);
 
-                // Validate the verification code
+                
                 bool isValidCode = await repo.ValidateVerificationCode(request.Email, request.Code);
 
                 if (!isValidCode)
@@ -134,7 +134,7 @@ namespace Api.Authentication.Controllers
                     return Results.Json(new { message = "Invalid verification code" }, statusCode: StatusCodes.Status401Unauthorized);
                 }
 
-                // Update the user's password
+                
                 await repo.UpdatePassword(request.Email, request.NewPassword);
 
                 Log.Information("Password reset successfully for email: {Email}", request.Email);
@@ -143,6 +143,34 @@ namespace Api.Authentication.Controllers
             catch (Exception ex)
             {
                 Log.Error(ex, "An error occurred during the password reset process.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> ChangePassword(IAuthenticationRepository repo, Domain.Authentication.Requests.ChangePasswordRequest request)
+        {
+            try
+            {
+                Log.Information("Attempting to change password for email: {Email}", request.Email);
+
+                
+                bool isValidOldPassword = await repo.ValidatePassword(request.Email, request.OldPassword);
+
+                if (!isValidOldPassword)
+                {
+                    Log.Warning("Invalid old password for email: {Email}", request.Email);
+                    return Results.Json(new { message = "Invalid old password" }, statusCode: StatusCodes.Status401Unauthorized);
+                }
+
+                
+                await repo.UpdatePassword(request.Email, request.NewPassword);
+
+                Log.Information("Password changed successfully for email: {Email}", request.Email);
+                return Results.Ok(new { message = "Password changed successfully" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while changing password.");
                 return Results.Problem(ex.Message);
             }
         }

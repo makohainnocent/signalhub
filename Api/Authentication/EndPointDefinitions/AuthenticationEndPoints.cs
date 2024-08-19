@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity.Data;
 using ForgotPasswordRequest = Domain.Authentication.Requests.ForgotPasswordRequest;
 using ResetPasswordRequest = Domain.Authentication.Requests.ResetPasswordRequest;
 using Application.Common.Abstractions;
+using System.Security.Claims;
 
 namespace Api.Authentication.EndPointDefinitions
 {
@@ -58,8 +59,8 @@ namespace Api.Authentication.EndPointDefinitions
             {
                 return await AuthenticationControllers.ForgotPassword(repo, request, emailService);
             })
-       .AddEndpointFilter<ValidationFilter<ForgotPasswordRequest>>()
-       .AllowAnonymous();
+            .AddEndpointFilter<ValidationFilter<ForgotPasswordRequest>>()
+            .AllowAnonymous();
 
             auth.MapPost("/reset-password", async (IAuthenticationRepository repo, [FromBody] ResetPasswordRequest request) =>
                 {
@@ -67,6 +68,18 @@ namespace Api.Authentication.EndPointDefinitions
                 })
                 .AddEndpointFilter<ValidationFilter<ResetPasswordRequest>>()
                 .AllowAnonymous();
+
+
+            auth.MapPost("/change-password", async (IAuthenticationRepository repo, [FromBody] ChangePasswordRequest request, ClaimsPrincipal user) =>
+            {
+                // You can access the user's email or ID from the claims if needed
+                var email = user.FindFirst(ClaimTypes.Email)?.Value;
+
+                // Proceed with password change logic
+                return await AuthenticationControllers.ChangePassword(repo, request);
+            })
+            .AddEndpointFilter<ValidationFilter<ChangePasswordRequest>>()
+            .RequireAuthorization();
 
         }
     }

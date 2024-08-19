@@ -27,6 +27,7 @@ namespace Application.Authentication.Abstractions
         Task StoreVerificationCode(string email, string code);
         Task<bool> ValidateVerificationCode(string email, string code);
         Task UpdatePassword(string email, string newPassword);
+        Task<bool> ValidatePassword(string email, string password);
 
 
     }
