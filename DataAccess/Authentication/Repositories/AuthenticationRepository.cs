@@ -298,6 +298,87 @@ namespace DataAccess.Authentication.Repositories
             }
         }
 
+        public async Task UpdateUser(int userId, UpdateUserRequest request)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                
+                var checkQuery = @"
+                SELECT COUNT(*)
+                FROM [User]
+                WHERE (Username = @Username OR Email = @Email) AND UserId <> @UserId";
+
+                var existingCount = await connection.QuerySingleAsync<int>(checkQuery, new
+                {
+                    Username = request.Username,
+                    Email = request.Email,
+                    UserId = userId
+                });
+
+                if (existingCount > 0)
+                {
+                    throw new UserAlreadyExistsException("Username or email already exists.");
+                }
+
+                // Build the update query dynamically
+                var updateFields = new List<string>();
+                var parameters = new DynamicParameters();
+                parameters.Add("UserId", userId);
+
+                if (!string.IsNullOrEmpty(request.Username))
+                {
+                    updateFields.Add("Username = @Username");
+                    parameters.Add("Username", request.Username);
+                }
+
+                if (!string.IsNullOrEmpty(request.Email))
+                {
+                    updateFields.Add("Email = @Email");
+                    parameters.Add("Email", request.Email);
+                }
+
+                if (!string.IsNullOrEmpty(request.FullName))
+                {
+                    updateFields.Add("FullName = @FullName");
+                    parameters.Add("FullName", request.FullName);
+                }
+
+                if (!string.IsNullOrEmpty(request.Address))
+                {
+                    updateFields.Add("Address = @Address");
+                    parameters.Add("Address", request.Address);
+                }
+
+                if (updateFields.Count == 0)
+                {
+                    return;
+                }
+
+                var updateQuery = $@"
+    UPDATE [User]
+    SET {string.Join(", ", updateFields)}
+    WHERE UserId = @UserId";
+
+                await connection.ExecuteAsync(updateQuery, parameters);
+            }
+        }
+
+
+        public async Task<User> GetUserByUsernameAsync(string username)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = @"
+            SELECT UserId, Username, HashedPassword, Email, FullName, Address, CreatedAt, LastLoginAt
+            FROM [User]
+            WHERE Username = @Username";
+
+                return await connection.QuerySingleOrDefaultAsync<User>(query, new { Username = username });
+            }
+        }
+
 
     }
 }

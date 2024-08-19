@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Serilog;
 using Api.Authentication.Utilities;
 using Application.Common.Abstractions;
+using System.Security.Claims;
 
 namespace Api.Authentication.Controllers
 {
@@ -174,5 +175,45 @@ namespace Api.Authentication.Controllers
                 return Results.Problem(ex.Message);
             }
         }
+
+        public static async Task<IResult> UpdateUser(IAuthenticationRepository repo, [FromBody] UpdateUserRequest request)
+        {
+            try
+            {
+                
+                if (request.UserId <= 0)
+                {
+                    return Results.BadRequest(new { message = "Valid UserId must be provided." });
+                }
+
+                
+                var existingUser = await repo.GetUserByIdAsync(request.UserId);
+                if (existingUser == null)
+                {
+                    return Results.NotFound(new { message = "User not found." });
+                }
+
+                
+
+                
+                await repo.UpdateUser(existingUser.UserId, request);
+
+                return Results.Ok(new { message = "User details updated successfully." });
+            }
+            catch (UserAlreadyExistsException ex)
+            {
+                
+                return Results.Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while updating user details.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+
+
+
     }
 }

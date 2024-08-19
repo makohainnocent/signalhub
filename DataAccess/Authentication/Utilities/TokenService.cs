@@ -28,7 +28,7 @@ namespace DataAccess.Authentication.Utilities
 
         public async Task<string> GenerateTokenAsync(int userId)
         {
-            // Retrieve user information from repositories
+            
             var user = await _repo.GetUserByIdAsync(userId);
             if (user == null)
             {
@@ -41,6 +41,8 @@ namespace DataAccess.Authentication.Utilities
             // Create claims for JWT
             var claimsIdentity = new ClaimsIdentity();
             claimsIdentity.AddClaim(new System.Security.Claims.Claim(ClaimTypes.Name, user.Username));
+            claimsIdentity.AddClaim(new System.Security.Claims.Claim(ClaimTypes.Email, user.Email));
+            claimsIdentity.AddClaim(new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()));
             claimsIdentity.AddClaims(roles.Select(role => new System.Security.Claims.Claim(ClaimTypes.Role, role.RoleName)));
             claimsIdentity.AddClaims(claims.Select(c => new System.Security.Claims.Claim(c.ClaimType, c.ClaimValue)));
 
@@ -50,7 +52,7 @@ namespace DataAccess.Authentication.Utilities
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = claimsIdentity,
-                Expires = DateTime.UtcNow.AddHours(1), // Token expiration time
+                Expires = DateTime.UtcNow.AddHours(1), 
                 Issuer = _issuer,
                 Audience = _audience,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -66,7 +68,7 @@ namespace DataAccess.Authentication.Utilities
             {
                 UserId = userId,
                 Token = Guid.NewGuid().ToString(),
-                ExpiresAt = DateTime.UtcNow.AddDays(7), // Refresh token valid for 7 days
+                ExpiresAt = DateTime.UtcNow.AddDays(7), 
                 CreatedAt = DateTime.UtcNow
             };
 

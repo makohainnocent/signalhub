@@ -28,7 +28,8 @@ namespace Application.Authentication.Abstractions
         Task<bool> ValidateVerificationCode(string email, string code);
         Task UpdatePassword(string email, string newPassword);
         Task<bool> ValidatePassword(string email, string password);
-
+        Task UpdateUser(int userId, UpdateUserRequest request);
+        Task<User> GetUserByUsernameAsync(string username);
 
     }
 }

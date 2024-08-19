@@ -72,14 +72,22 @@ namespace Api.Authentication.EndPointDefinitions
 
             auth.MapPost("/change-password", async (IAuthenticationRepository repo, [FromBody] ChangePasswordRequest request, ClaimsPrincipal user) =>
             {
-                // You can access the user's email or ID from the claims if needed
+                
                 var email = user.FindFirst(ClaimTypes.Email)?.Value;
 
-                // Proceed with password change logic
+                
                 return await AuthenticationControllers.ChangePassword(repo, request);
             })
             .AddEndpointFilter<ValidationFilter<ChangePasswordRequest>>()
             .RequireAuthorization();
+
+            auth.MapPost("/update-user", async (IAuthenticationRepository repo, ClaimsPrincipal user, [FromBody] UpdateUserRequest request) =>
+            {
+                return await AuthenticationControllers.UpdateUser(repo, request);
+            })
+            .AddEndpointFilter<ValidationFilter<UpdateUserRequest>>()
+            .RequireAuthorization(); 
+
 
         }
     }
