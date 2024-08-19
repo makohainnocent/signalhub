@@ -108,7 +108,11 @@ namespace Api.Core.Extensions
                     };
                 });
 
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("AdminOnly", policy =>
+                    policy.RequireRole("Admin"));
+            });
 
 
             var secretKey = jwtSettings["SecretKey"];

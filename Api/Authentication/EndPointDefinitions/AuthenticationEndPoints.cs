@@ -5,17 +5,16 @@ using Domain.Authentication.Requests;
 using Api.Common.Filters;
 using Api.Authentication.Validators;
 using Microsoft.AspNetCore.Mvc;
-using FluentValidation;
 using Asp.Versioning.Builder;
 using Asp.Versioning;
 using DataAccess.Authentication.Utilities;
-using Microsoft.AspNetCore.Identity.Data;
 using ForgotPasswordRequest = Domain.Authentication.Requests.ForgotPasswordRequest;
 using ResetPasswordRequest = Domain.Authentication.Requests.ResetPasswordRequest;
 using Application.Common.Abstractions;
 using System.Security.Claims;
 using Serilog;
-using Azure.Core;
+using Microsoft.AspNetCore.Http;
+
 
 namespace Api.Authentication.EndPointDefinitions
 {
@@ -101,6 +100,21 @@ namespace Api.Authentication.EndPointDefinitions
                 return await AuthenticationControllers.GetUserByClaim(repo,user);
             })
             .RequireAuthorization();
+
+            auth.MapGet("/get-users", async (IAuthenticationRepository repo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10) =>
+            {
+                return await AuthenticationControllers.GetUsers(repo, pageNumber, pageSize);
+            })
+            .RequireAuthorization();
+
+            auth.MapDelete("/delete-user/{userId:int}", async (IAuthenticationRepository repo, int userId, HttpContext httpContext) =>
+            {
+                var user = httpContext.User;
+                var isAdmin = user.IsInRole("Admin");
+                var permissions = user.Claims.FirstOrDefault(c => c.Type == "Permission")?.Value;
+                return await AuthenticationControllers.DeleteUser(repo, userId);
+            })
+            .RequireAuthorization("AdminOnly");
 
 
         }

@@ -259,6 +259,58 @@ namespace Api.Authentication.Controllers
             }
         }
 
+        public static async Task<IResult> GetUsers(IAuthenticationRepository repo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            // Validate query parameters
+            if (pageNumber <= 0)
+            {
+                return Results.BadRequest(new { message = "Page number must be greater than 0." });
+            }
+
+            if (pageSize <= 0 || pageSize > 100)
+            {
+                return Results.BadRequest(new { message = "Page size must be between 1 and 100." });
+            }
+
+            try
+            {
+                // Fetch paged users from the repository
+                var pagedResult = await repo.GetUsersAsync(pageNumber, pageSize);
+
+                return Results.Ok(pagedResult);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while retrieving users.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> DeleteUser(IAuthenticationRepository repo, int userId)
+        {
+            try
+            {
+                if (userId <= 0)
+                {
+                    return Results.BadRequest(new { message = "Invalid UserId." });
+                }
+
+                var user = await repo.GetUserByIdAsync(userId);
+                if (user == null)
+                {
+                    return Results.NotFound(new { message = "User not found." });
+                }
+
+                await repo.DeleteUserAsync(userId);
+                return Results.Ok(new { message = "User deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while deleting the user.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
 
 
 

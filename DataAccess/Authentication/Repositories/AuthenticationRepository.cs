@@ -13,6 +13,7 @@ using System.Text;
 using DataAccess.Common.Utilities;
 using System.Security.Authentication;
 using DataAccess.Authentication.Exceptions;
+using Domain.Common;
 
 
 namespace DataAccess.Authentication.Repositories
@@ -378,6 +379,65 @@ namespace DataAccess.Authentication.Repositories
                 return await connection.QuerySingleOrDefaultAsync<User>(query, new { Username = username });
             }
         }
+
+        public async Task<PagedResultResponse<User>> GetUsersAsync(int pageNumber, int pageSize)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Calculate the number of records to skip
+                var skip = (pageNumber - 1) * pageSize;
+
+                // Define the query with pagination
+                const string query = @"
+                SELECT *
+                FROM [User]
+                ORDER BY Username
+                OFFSET @Skip ROWS
+                FETCH NEXT @PageSize ROWS ONLY;
+            
+                SELECT COUNT(*)
+                FROM [User];";
+
+                // Execute the query and retrieve results
+                using (var multi = await connection.QueryMultipleAsync(query, new { Skip = skip, PageSize = pageSize }))
+                {
+                    var users = multi.Read<User>().ToList();
+                    var totalRecords = multi.ReadSingle<int>();
+
+                    return new PagedResultResponse<User>
+                    {
+                        Items = users,
+                        TotalCount = totalRecords,
+                        PageNumber = pageNumber,
+                        PageSize = pageSize
+                    };
+                }
+            }
+        }
+
+        public async Task DeleteUserAsync(int userId)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                
+                const string query = @"
+                DELETE FROM [User]
+                WHERE UserId = @UserId";
+
+                var affectedRows = await connection.ExecuteAsync(query, new { UserId = userId });
+
+                if (affectedRows == 0)
+                {
+                    throw new UserNotFoundException("User not found.");
+                }
+            }
+        }
+
+
 
 
     }

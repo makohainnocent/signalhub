@@ -1,4 +1,5 @@
 ﻿using Domain.Authentication.Requests;
+using Domain.Common;
 using Domain.Core.Models;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,8 @@ namespace Application.Authentication.Abstractions
         Task<bool> ValidatePassword(string email, string password);
         Task UpdateUser(int userId, UpdateUserRequest request);
         Task<User> GetUserByUsernameAsync(string username);
+        Task<PagedResultResponse<User>> GetUsersAsync(int pageNumber, int pageSize);
+        Task DeleteUserAsync(int userId);
 
     }
 }
