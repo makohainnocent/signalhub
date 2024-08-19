@@ -193,9 +193,6 @@ namespace Api.Authentication.Controllers
                     return Results.NotFound(new { message = "User not found." });
                 }
 
-                
-
-                
                 await repo.UpdateUser(existingUser.UserId, request);
 
                 return Results.Ok(new { message = "User details updated successfully." });
@@ -208,6 +205,56 @@ namespace Api.Authentication.Controllers
             catch (Exception ex)
             {
                 Log.Error(ex, "An error occurred while updating user details.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> GetUserById(IAuthenticationRepository repo, [FromQuery] int userId)
+        {
+            if (userId <= 0)
+            {
+                return Results.BadRequest(new { message = "Invalid user ID provided." });
+            }
+
+            try
+            {
+                var user = await repo.GetUserByIdAsync(userId);
+                if (user == null)
+                {
+                    return Results.NotFound(new { message = "User not found." });
+                }
+
+                return Results.Ok(user);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while retrieving user details.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> GetUserByClaim(IAuthenticationRepository repo, ClaimsPrincipal user)
+        {
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Results.BadRequest(new { message = "User ID not found in claims." });
+            }
+
+            try
+            {
+                var existingUser = await repo.GetUserByIdAsync(userId);
+                if (existingUser == null)
+                {
+                    return Results.NotFound(new { message = "User not found." });
+                }
+
+                return Results.Ok(existingUser);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while retrieving user details.");
                 return Results.Problem(ex.Message);
             }
         }

@@ -14,6 +14,8 @@ using ForgotPasswordRequest = Domain.Authentication.Requests.ForgotPasswordReque
 using ResetPasswordRequest = Domain.Authentication.Requests.ResetPasswordRequest;
 using Application.Common.Abstractions;
 using System.Security.Claims;
+using Serilog;
+using Azure.Core;
 
 namespace Api.Authentication.EndPointDefinitions
 {
@@ -86,7 +88,19 @@ namespace Api.Authentication.EndPointDefinitions
                 return await AuthenticationControllers.UpdateUser(repo, request);
             })
             .AddEndpointFilter<ValidationFilter<UpdateUserRequest>>()
-            .RequireAuthorization(); 
+            .RequireAuthorization();
+
+            auth.MapGet("/get-user-by-id", async (IAuthenticationRepository repo, [FromQuery] int userId) =>
+            {
+                return await AuthenticationControllers.GetUserById(repo, userId);
+            })
+            .RequireAuthorization();
+
+            auth.MapGet("/get-user-by-claims", async (IAuthenticationRepository repo, ClaimsPrincipal user) =>
+            {
+                return await AuthenticationControllers.GetUserByClaim(repo,user);
+            })
+            .RequireAuthorization();
 
 
         }

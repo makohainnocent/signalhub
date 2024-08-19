@@ -357,9 +357,9 @@ namespace DataAccess.Authentication.Repositories
                 }
 
                 var updateQuery = $@"
-    UPDATE [User]
-    SET {string.Join(", ", updateFields)}
-    WHERE UserId = @UserId";
+                UPDATE [User]
+                SET {string.Join(", ", updateFields)}
+                WHERE UserId = @UserId";
 
                 await connection.ExecuteAsync(updateQuery, parameters);
             }
