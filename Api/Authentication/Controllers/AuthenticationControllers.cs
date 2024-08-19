@@ -1,10 +1,13 @@
-﻿using Serilog;
-using Application.Authentication.Abstractions;
+﻿using Application.Authentication.Abstractions;
 using DataAccess.Authentication.Exceptions;
 using DataAccess.Authentication.Utilities;
 using Domain.Authentication.Requests;
 using Domain.Core.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Serilog;
+using Api.Authentication.Utilities;
+using Application.Common.Abstractions;
 
 namespace Api.Authentication.Controllers
 {
@@ -91,6 +94,55 @@ namespace Api.Authentication.Controllers
             catch (Exception ex)
             {
                 Log.Error(ex, "An error occurred while refreshing token.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> ForgotPassword(IAuthenticationRepository repo, Domain.Authentication.Requests.ForgotPasswordRequest request, IEmailService emailService)
+        {
+            try
+            {
+                Log.Information("Processing forgot password request for email: {Email}", request.Email);
+
+                string verificationCode = VerificationCode.GenerateVerificationCode();
+
+                await repo.StoreVerificationCode(request.Email, verificationCode);
+                await VerificationCode.SendVerificationCodeAsync(emailService, request.Email, verificationCode);
+
+                Log.Information("Verification code sent for password reset to email: {Email}", request.Email);
+                return Results.Ok(new { message = "Verification code sent" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred during the forgot password process.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> ResetPassword(IAuthenticationRepository repo, Domain.Authentication.Requests.ResetPasswordRequest request)
+        {
+            try
+            {
+                Log.Information("Attempting to reset password for email: {Email}", request.Email);
+
+                // Validate the verification code
+                bool isValidCode = await repo.ValidateVerificationCode(request.Email, request.Code);
+
+                if (!isValidCode)
+                {
+                    Log.Warning("Invalid verification code for email: {Email}", request.Email);
+                    return Results.Json(new { message = "Invalid verification code" }, statusCode: StatusCodes.Status401Unauthorized);
+                }
+
+                // Update the user's password
+                await repo.UpdatePassword(request.Email, request.NewPassword);
+
+                Log.Information("Password reset successfully for email: {Email}", request.Email);
+                return Results.Ok(new { message = "Password reset successfully" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred during the password reset process.");
                 return Results.Problem(ex.Message);
             }
         }

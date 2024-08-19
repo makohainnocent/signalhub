@@ -218,6 +218,66 @@ namespace DataAccess.Authentication.Repositories
                 
         }
 
+        public async Task StoreVerificationCode(string email, string code)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = @"
+                INSERT INTO VerificationCodes (Email, Code, ExpiryDate)
+                VALUES (@Email, @Code, @ExpiryDate)";
+
+                var parameters = new
+                {
+                    Email = email,
+                    Code = code,
+                    ExpiryDate = DateTime.UtcNow.AddMinutes(10)
+                };
+
+                await connection.ExecuteAsync(query, parameters);
+            }
+        }
+
+
+        public async Task<bool> ValidateVerificationCode(string email, string code)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = @"
+                SELECT COUNT(*)
+                FROM VerificationCodes
+                WHERE Email = @Email AND Code = @Code AND ExpiryDate > @CurrentDate";
+
+                var parameters = new
+                {
+                    Email = email,
+                    Code = code,
+                    CurrentDate = DateTime.UtcNow
+                };
+
+                var count = await connection.QuerySingleAsync<int>(query, parameters);
+                return count > 0;
+            }
+        }
+
+        public async Task UpdatePassword(string email, string newPassword)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = @"
+                UPDATE Users
+                SET PasswordHash = @PasswordHash
+                WHERE Email = @Email";
+
+                var parameters = new
+                {
+                    Email = email,
+                    PasswordHash = PasswordHasher.HashPassword(newPassword) 
+                };
+
+                await connection.ExecuteAsync(query, parameters);
+            }
+        }
+
 
     }
 }

@@ -18,6 +18,8 @@ using System.Text;
 using DataAccess.Authentication.Utilities;
 using Api.Core.MiddleWares;
 using Serilog;
+using Api.Core.Services;
+using System.Configuration;
 
 
 
@@ -41,21 +43,8 @@ namespace Api.Core.Extensions
                     .AddLogging(config => config.AddFluentMigratorConsole());
             builder.Services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
 
-
-
-
-
-            //builder.Services.AddValidatorsFromAssemblyContaining<UserRegistrationValidator>();
-            //builder.Services.AddValidatorsFromAssembly(Assembly.Load("Api"));
-            //builder.Services.AddValidatorsFromAssembly(Assembly.Load("Domain"));
-            //builder.Services.AddValidatorsFromAssembly(Assembly.Load("Application"));
-            //builder.Services.AddValidatorsFromAssembly(Assembly.Load("DataAccess"));
-            //builder.Services.AddScoped<IValidator<UserRegistrationRequest>, UserRegistrationValidator>();
-
-            // Register all validators in the current assembly
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-            //builder.Services.AddScoped<IValidator<UserRegistrationRequest>, UserRegistrationValidator>();
             builder.Services.AddScoped(typeof(ValidationFilter<>));
 
             builder.Services.AddApiVersioning(options =>
@@ -99,7 +88,21 @@ namespace Api.Core.Extensions
                 new TokenService(secretKey, issuer, audience, provider.GetRequiredService<IAuthenticationRepository>()));
             
             builder.Services.AddSerilog();
+
             
+            var smtpSettings = builder.Configuration.GetSection("SmtpSettings").Get<SmtpSettings>();
+
+            
+            builder.Services.AddSingleton<IEmailService>(new EmailService(
+                smtpSettings.Host,
+                smtpSettings.Port,
+                smtpSettings.Username,
+                smtpSettings.Password,
+                smtpSettings.FromEmail
+            ));
+
+            
+
 
         }
 

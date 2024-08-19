@@ -24,6 +24,9 @@ namespace Application.Authentication.Abstractions
         Task<RefreshToken> GetByTokenAsync(string token);
         Task AddAsync(RefreshToken refreshToken);
         Task RevokeAsync(string token);
+        Task StoreVerificationCode(string email, string code);
+        Task<bool> ValidateVerificationCode(string email, string code);
+        Task UpdatePassword(string email, string newPassword);
 
 
     }

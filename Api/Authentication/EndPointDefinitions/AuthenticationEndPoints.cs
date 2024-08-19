@@ -9,6 +9,10 @@ using FluentValidation;
 using Asp.Versioning.Builder;
 using Asp.Versioning;
 using DataAccess.Authentication.Utilities;
+using Microsoft.AspNetCore.Identity.Data;
+using ForgotPasswordRequest = Domain.Authentication.Requests.ForgotPasswordRequest;
+using ResetPasswordRequest = Domain.Authentication.Requests.ResetPasswordRequest;
+using Application.Common.Abstractions;
 
 namespace Api.Authentication.EndPointDefinitions
 {
@@ -49,8 +53,23 @@ namespace Api.Authentication.EndPointDefinitions
                  {
                      return await AuthenticationControllers.RefreshToken(repo, tokenService, request);
                  }).AllowAnonymous();
+
+            auth.MapPost("/forgot-password", async (IAuthenticationRepository repo, [FromBody] ForgotPasswordRequest request, IEmailService emailService) =>
+            {
+                return await AuthenticationControllers.ForgotPassword(repo, request, emailService);
+            })
+       .AddEndpointFilter<ValidationFilter<ForgotPasswordRequest>>()
+       .AllowAnonymous();
+
+            auth.MapPost("/reset-password", async (IAuthenticationRepository repo, [FromBody] ResetPasswordRequest request) =>
+                {
+                    return await AuthenticationControllers.ResetPassword(repo, request);
+                })
+                .AddEndpointFilter<ValidationFilter<ResetPasswordRequest>>()
+                .AllowAnonymous();
+
         }
-        }
+    }
     
 }
 
