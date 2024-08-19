@@ -38,12 +38,17 @@ namespace Api.Authentication.EndPointDefinitions
                 .AllowAnonymous();
 
 
-                app.MapPost("/login", async (IAuthenticationRepository repo, [FromBody] UserLoginRequest request, TokenService tokenService) =>
+                auth.MapPost("/login", async (IAuthenticationRepository repo, [FromBody] UserLoginRequest request, TokenService tokenService) =>
                 {
                     return await AuthenticationControllers.LoginUser(repo, request, tokenService);
                 })
                 .AddEndpointFilter<ValidationFilter<UserLoginRequest>>()
                 .AllowAnonymous();
+
+                 auth.MapPost("/refresh-token", async (IAuthenticationRepository repo , TokenService tokenService, [FromBody] RefreshTokenRequest request) =>
+                 {
+                     return await AuthenticationControllers.RefreshToken(repo, tokenService, request);
+                 }).AllowAnonymous();
         }
         }
     

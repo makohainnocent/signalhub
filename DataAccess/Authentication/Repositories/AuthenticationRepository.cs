@@ -11,6 +11,8 @@ using Domain.Authentication.Requests;
 using System.Security.Cryptography;
 using System.Text;
 using DataAccess.Common.Utilities;
+using System.Security.Authentication;
+using DataAccess.Authentication.Exceptions;
 
 namespace DataAccess.Authentication.Repositories
 {
@@ -43,7 +45,7 @@ namespace DataAccess.Authentication.Repositories
 
                 if (existingCount > 0)
                 {
-                    throw new InvalidOperationException("Username or email already exists.");
+                    throw new UserAlreadyExistsException("Username or email already exists.");
                 }
 
                 // Hash the password
@@ -102,7 +104,7 @@ namespace DataAccess.Authentication.Repositories
                 
                 if (user == null)
                 {
-                    throw new InvalidOperationException("Invalid username or email.");
+                    throw new InvalidCredentialsException("Invalid username or email.");
                 }
 
                 
@@ -111,7 +113,7 @@ namespace DataAccess.Authentication.Repositories
                 
                 if (!isPasswordValid)
                 {
-                    throw new InvalidOperationException("Invalid password.");
+                    throw new InvalidCredentialsException("Invalid password.");
                 }
 
                 
@@ -176,6 +178,41 @@ namespace DataAccess.Authentication.Repositories
                     WHERE UserId = @UserId";
 
                     return await connection.QuerySingleOrDefaultAsync<User>(query, new { UserId = userId });
+            }
+                
+        }
+
+        public async Task<RefreshToken> GetByTokenAsync(string token)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = "SELECT * FROM RefreshTokens WHERE Token = @Token AND RevokedAt IS NULL";
+                return await connection.QuerySingleOrDefaultAsync<RefreshToken>(query, new { Token = token });
+            }
+
+                
+        }
+
+        public async Task AddAsync(RefreshToken refreshToken)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = @"
+                INSERT INTO RefreshTokens (UserId, Token, ExpiresAt, CreatedAt)
+                VALUES (@UserId, @Token, @ExpiresAt, @CreatedAt)";
+
+                await connection.ExecuteAsync(query, refreshToken);
+            }
+               
+        }
+
+        public async Task RevokeAsync(string token)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                const string query = "UPDATE RefreshTokens SET RevokedAt = @RevokedAt WHERE Token = @Token";
+
+                await connection.ExecuteAsync(query, new { Token = token, RevokedAt = DateTime.UtcNow });
             }
                 
         }

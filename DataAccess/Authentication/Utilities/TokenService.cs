@@ -1,4 +1,5 @@
 ﻿using Application.Authentication.Abstractions;
+using Domain.Core.Models;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -39,9 +40,9 @@ namespace DataAccess.Authentication.Utilities
 
             // Create claims for JWT
             var claimsIdentity = new ClaimsIdentity();
-            claimsIdentity.AddClaim(new Claim(ClaimTypes.Name, user.Username));
-            claimsIdentity.AddClaims(roles.Select(role => new Claim(ClaimTypes.Role, role.RoleName)));
-            claimsIdentity.AddClaims(claims.Select(c => new Claim(c.ClaimType, c.ClaimValue)));
+            claimsIdentity.AddClaim(new System.Security.Claims.Claim(ClaimTypes.Name, user.Username));
+            claimsIdentity.AddClaims(roles.Select(role => new System.Security.Claims.Claim(ClaimTypes.Role, role.RoleName)));
+            claimsIdentity.AddClaims(claims.Select(c => new System.Security.Claims.Claim(c.ClaimType, c.ClaimValue)));
 
             // Create JWT token
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -57,6 +58,20 @@ namespace DataAccess.Authentication.Utilities
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<string> GenerateRefreshTokenAsync(int userId)
+        {
+            var refreshToken = new RefreshToken
+            {
+                UserId = userId,
+                Token = Guid.NewGuid().ToString(),
+                ExpiresAt = DateTime.UtcNow.AddDays(7), // Refresh token valid for 7 days
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _repo.AddAsync(refreshToken);
+            return refreshToken.Token;
         }
     }
 }

@@ -16,10 +16,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DataAccess.Authentication.Utilities;
+using Api.Core.MiddleWares;
 
 
 
-namespace Api.Common.Extensions
+namespace Api.Core.Extensions
 {
     public static class Extensions
     {
@@ -62,10 +63,10 @@ namespace Api.Common.Extensions
                 options.ApiVersionReader = new UrlSegmentApiVersionReader();
 
 
-            }).AddApiExplorer(options=>
+            }).AddApiExplorer(options =>
             {
                 options.GroupNameFormat = "'v'V";
-                options.SubstituteApiVersionInUrl= true;
+                options.SubstituteApiVersionInUrl = true;
             });
 
             var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -74,7 +75,7 @@ namespace Api.Common.Extensions
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
-                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
                         ValidateAudience = true,
@@ -88,12 +89,12 @@ namespace Api.Common.Extensions
 
             builder.Services.AddAuthorization();
 
-            
+
             var secretKey = jwtSettings["SecretKey"];
             var issuer = jwtSettings["Issuer"];
             var audience = jwtSettings["Audience"];
 
-            builder.Services.AddScoped<TokenService>(provider =>
+            builder.Services.AddScoped(provider =>
                 new TokenService(secretKey, issuer, audience, provider.GetRequiredService<IAuthenticationRepository>()));
         }
 
@@ -111,9 +112,9 @@ namespace Api.Common.Extensions
             }
         }
 
-        /*public static IApplicationBuilder UseExceptionHandlingMiddleware(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseExceptionHandlingMiddleware(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<ExceptionHandlingMiddleware>();
-        }*/
+        }
     }
 }
