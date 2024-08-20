@@ -200,7 +200,7 @@ namespace Api.Authentication.EndPointDefinitions
             auth.MapGet("/user-roles-all", async (IAuthenticationRepository repo, int pageNumber = 1, int pageSize = 10, string? search = null) =>
             {
                 return await AuthenticationControllers.GetUserRolesAsync(repo, pageNumber, pageSize, search);
-            })
+            });
             //.WithTags("UserRoles");
             //.RequireAuthorization("AdminOnly");
         }
