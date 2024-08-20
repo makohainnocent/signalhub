@@ -406,6 +406,277 @@ namespace Api.Authentication.Controllers
             }
         }
 
+        public static async Task<IResult> AddClaim(IAuthenticationRepository repo, AddClaimRequest request)
+        {
+            try
+            {
+               
+                if (string.IsNullOrWhiteSpace(request.ClaimType) || string.IsNullOrWhiteSpace(request.ClaimValue))
+                {
+                    return Results.BadRequest(new { message = "ClaimType and ClaimValue are required." });
+                }
+
+               
+                var claimId = await repo.AddClaimAsync(request);
+
+                return Results.Created($"/claims/{claimId}", new { ClaimId = claimId });
+            }
+            catch (ItemAlreadyExistsException ex)
+            {
+                return Results.Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while adding the claim.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> UpdateClaim(IAuthenticationRepository repo, UpdateClaimRequest request)
+        {
+            try
+            {
+                if (request.ClaimId <= 0 || string.IsNullOrWhiteSpace(request.ClaimType) || string.IsNullOrWhiteSpace(request.ClaimValue))
+                {
+                    return Results.BadRequest(new { message = "ClaimId, ClaimType, and ClaimValue are required." });
+                }
+
+               
+                var updatedClaim = await repo.UpdateClaimAsync(request);
+
+                if (updatedClaim == null)
+                {
+                    return Results.NotFound(new { message = "Claim not found." });
+                }
+
+                return Results.Ok(updatedClaim);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while updating the claim.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> GetClaims(IAuthenticationRepository repo, int pageNumber = 1, int pageSize = 10, string? search = null)
+        {
+            try
+            {
+                
+                if (pageNumber <= 0)
+                {
+                    return Results.BadRequest(new { message = "Page number must be greater than 0." });
+                }
+
+                if (pageSize <= 0 || pageSize > 100)
+                {
+                    return Results.BadRequest(new { message = "Page size must be between 1 and 100." });
+                }
+
+                
+                var pagedResult = await repo.GetClaimsAsync(pageNumber, pageSize, search);
+
+                if (!pagedResult.Items.Any())
+                {
+                    return Results.NotFound(new { message = "No claims found." });
+                }
+
+                return Results.Ok(pagedResult);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while retrieving claims.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> GetClaimById(IAuthenticationRepository repo, int claimId)
+        {
+            try
+            {
+                
+                var claim = await repo.GetClaimByIdAsync(claimId);
+
+                if (claim == null)
+                {
+                    return Results.NotFound(new { message = "Claim not found." });
+                }
+
+                return Results.Ok(claim);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while retrieving the claim.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> DeleteClaimAsync(IAuthenticationRepository repo, int claimId)
+        {
+            try
+            {
+                await repo.DeleteClaimAsync(claimId);
+                return Results.Ok(new { message = "Claim successfully deleted." });
+            }
+            catch (ItemDoesNotExistException ex)
+            {
+                return Results.NotFound(new { message = ex.Message }); 
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while deleting the claim.");
+                return Results.Problem(ex.Message); 
+            }
+        }
+
+        public static async Task<IResult> DeleteRoleAsync(IAuthenticationRepository repo, int roleId)
+        {
+            try
+            {
+                await repo.DeleteRoleAsync(roleId);
+                return Results.Ok(new { message = "Role successfully deleted." }); 
+            }
+            catch (ItemDoesNotExistException ex)
+            {
+                return Results.NotFound(new { message = ex.Message }); 
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while deleting the role.");
+                return Results.Problem(ex.Message); 
+            }
+        }
+
+        public static async Task<IResult> GetRoleAsync(IAuthenticationRepository repo, int roleId)
+        {
+            try
+            {
+                var role = await repo.GetRoleAsync(roleId);
+
+                if (role == null)
+                {
+                    return Results.NotFound(new { message = "Role not found." }); 
+                }
+
+                return Results.Ok(role); 
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while retrieving the role.");
+                return Results.Problem(ex.Message); 
+            }
+        }
+
+        public static async Task<IResult> AddRoleToUserAsync(IAuthenticationRepository repo, AddRoleToUserRequest request)
+        {
+            try
+            {
+                bool result = await repo.AddRoleToUserAsync(request);
+
+                if (result)
+                {
+                    return Results.Ok(new { message = "Role added to user successfully." });
+                }
+                else
+                {
+                    return Results.BadRequest("Failed to add role");
+                }
+                
+            }
+            catch (ItemAlreadyExistsException ex)
+            {
+                return Results.Conflict(new { message = ex.Message });
+            }
+            catch (ItemDoesNotExistException ex)
+            {
+                return Results.NotFound(new { message = ex.Message }); 
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while adding the role to the user.");
+                return Results.Problem(ex.Message); 
+            }
+        }
+
+        public static async Task<IResult> RemoveRoleFromUserAsync(IAuthenticationRepository repo, RemoveRoleFromUserRequest request)
+        {
+            try
+            {
+                bool result = await repo.RemoveRoleFromUserAsync(request);
+
+                if (result)
+                {
+                    return Results.Ok(new { message = "Role removed from user successfully." });
+                }
+                else
+                {
+                    return Results.NotFound(new { message = "Role was not assigned to the user or does not exist." });
+                }
+            }
+            catch (ItemDoesNotExistException ex)
+            {
+                return Results.NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while removing the role from the user.");
+                return Results.Problem(ex.Message); 
+            }
+        }
+
+        public static async Task<IResult> GetRolesByUserAsync(IAuthenticationRepository repo, int userId)
+        {
+            try
+            {
+                
+                var roles = await repo.GetRolesByUserIdAsync(userId);
+
+               
+                if (roles == null || !roles.Any())
+                {
+                    
+                    return Results.NotFound(new { message = $"No roles found for user with UserId: {userId}" });
+                }
+
+                
+                return Results.Ok(roles);
+            }
+            catch (ItemDoesNotExistException ex)
+            {
+                
+                return Results.NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                
+                Log.Error(ex, "An error occurred while retrieving roles for the user.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> GetUserRolesAsync(IAuthenticationRepository repo, int pageNumber, int pageSize, string? search)
+        {
+            try
+            {
+                var result = await repo.GetUserRolesAsync(pageNumber, pageSize, search);
+
+                if (result.Items == null || !result.Items.Any())
+                {
+                    return Results.NotFound(new { message = "No user roles found." });
+                }
+
+                return Results.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while retrieving user roles.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+
+
+
 
     }
 }

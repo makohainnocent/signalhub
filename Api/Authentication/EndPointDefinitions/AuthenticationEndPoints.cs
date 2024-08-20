@@ -136,6 +136,73 @@ namespace Api.Authentication.EndPointDefinitions
                 return await AuthenticationControllers.GetRolesAll(repo, page, pageSize, search);
             });
             //.RequireAuthorization();
+
+            auth.MapPost("/add-claim", async (IAuthenticationRepository repo, AddClaimRequest request) =>
+            {
+                return await AuthenticationControllers.AddClaim(repo, request);
+            });
+            //.RequireAuthorization();
+
+            auth.MapPut("/update-claim", async (IAuthenticationRepository repo, UpdateClaimRequest request) =>
+            {
+                return await AuthenticationControllers.UpdateClaim(repo, request);
+            });
+            //.RequireAuthorization();
+
+            auth.MapGet("/get-claims-all", async (IAuthenticationRepository repo, int pageNumber = 1, int pageSize = 10, string? search = null) =>
+            {
+                return await AuthenticationControllers.GetClaims(repo, pageNumber, pageSize, search);
+            });
+            //.RequireAuthorization();
+
+            auth.MapGet("/get-claim/{claimId}", async (IAuthenticationRepository repo, int claimId) =>
+            {
+                return await AuthenticationControllers.GetClaimById(repo, claimId);
+            });
+            //.RequireAuthorization();
+
+            auth.MapDelete("/delete-claim/{claimId:int}", async (IAuthenticationRepository repo, int claimId) =>
+            {
+                return await AuthenticationControllers.DeleteClaimAsync(repo, claimId);
+            });
+            //.RequireAuthorization();
+
+            auth.MapDelete("/delete-role/{roleId:int}", async (IAuthenticationRepository repo, int roleId) =>
+            {
+                return await AuthenticationControllers.DeleteRoleAsync(repo, roleId);
+            });
+            //.RequireAuthorization();
+
+            auth.MapGet("/get-role/{roleId:int}", async (IAuthenticationRepository repo, int roleId) =>
+            {
+                return await AuthenticationControllers.GetRoleAsync(repo, roleId);
+            });
+            //.RequireAuthorization();
+
+            auth.MapPost("/add-role-to-user", async (IAuthenticationRepository repo, AddRoleToUserRequest request) =>
+            {
+                return await AuthenticationControllers.AddRoleToUserAsync(repo, request);
+            });
+            //.RequireAuthorization();
+
+            auth.MapPost("/remove-role-from-user", async (IAuthenticationRepository repo, RemoveRoleFromUserRequest request) =>
+            {
+                return await AuthenticationControllers.RemoveRoleFromUserAsync(repo, request);
+            });
+            //.RequireAuthorization();
+
+            auth.MapGet("/user-roles", async (IAuthenticationRepository repo, [FromQuery] int userId) =>
+            {
+                return await AuthenticationControllers.GetRolesByUserAsync(repo, userId);
+            });
+            //.RequireAuthorization();
+
+            auth.MapGet("/user-roles-all", async (IAuthenticationRepository repo, int pageNumber = 1, int pageSize = 10, string? search = null) =>
+            {
+                return await AuthenticationControllers.GetUserRolesAsync(repo, pageNumber, pageSize, search);
+            })
+            //.WithTags("UserRoles");
+            //.RequireAuthorization("AdminOnly");
         }
     }
     

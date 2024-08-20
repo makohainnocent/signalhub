@@ -13,7 +13,9 @@ using System.Text;
 using DataAccess.Common.Utilities;
 using System.Security.Authentication;
 using DataAccess.Authentication.Exceptions;
-using Domain.Common;
+using System.Transactions;
+using Domain.Common.Responses;
+using Domain.Authentication.Responses;
 
 
 namespace DataAccess.Authentication.Repositories
@@ -575,6 +577,414 @@ namespace DataAccess.Authentication.Repositories
                 };
             }
         }
+
+
+        public async Task<int> AddClaimAsync(AddClaimRequest claim)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        
+                        const string checkQuery = "SELECT COUNT(*) FROM [Claims] WHERE ClaimType = @ClaimType";
+                        var existingCount = await connection.ExecuteScalarAsync<int>(checkQuery, new { ClaimType = claim.ClaimType }, transaction);
+
+                        if (existingCount > 0)
+                        {
+                            
+                            throw new ItemAlreadyExistsException($"A claim with type '{claim.ClaimType}' already exists.");
+                        }
+
+                        
+                        const string insertQuery = @"
+                        INSERT INTO [Claims] (ClaimType, ClaimValue)
+                        VALUES (@ClaimType, @ClaimValue);
+                        SELECT SCOPE_IDENTITY();";
+
+                        var newClaimId = await connection.ExecuteScalarAsync<int>(insertQuery, new
+                        {
+                            ClaimType = claim.ClaimType,
+                            ClaimValue = claim.ClaimValue
+                        }, transaction);
+
+                        transaction.Commit();
+                        return newClaimId;
+                    }
+                    catch (ItemAlreadyExistsException)
+                    {
+                        
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        
+                        transaction.Rollback();
+                        throw; 
+                    }
+                }
+            }
+        }
+
+        public async Task<Claim?> UpdateClaimAsync(UpdateClaimRequest request)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                
+                const string checkQuery = "SELECT COUNT(*) FROM [Claims] WHERE ClaimId = @ClaimId";
+                var existingCount = await connection.ExecuteScalarAsync<int>(checkQuery, new { ClaimId = request.ClaimId });
+
+                if (existingCount == 0)
+                {
+                    return null;
+                }
+
+                // Build the dynamic update query based on provided fields
+                var updateQuery = new StringBuilder("UPDATE [Claims] SET ");
+                var parameters = new DynamicParameters();
+
+                // Conditionally add parameters
+                if (!string.IsNullOrWhiteSpace(request.ClaimType))
+                {
+                    updateQuery.Append("ClaimType = @ClaimType, ");
+                    parameters.Add("ClaimType", request.ClaimType);
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.ClaimValue))
+                {
+                    updateQuery.Append("ClaimValue = @ClaimValue, ");
+                    parameters.Add("ClaimValue", request.ClaimValue);
+                }
+
+                // Remove the last comma and space
+                if (updateQuery.Length > 0)
+                {
+                    updateQuery.Length -= 2; // Remove trailing ", "
+                }
+                else
+                {
+                    
+                    return null;
+                }
+
+                updateQuery.Append(" WHERE ClaimId = @ClaimId");
+                parameters.Add("ClaimId", request.ClaimId);
+
+                
+                var affectedRows = await connection.ExecuteAsync(updateQuery.ToString(), parameters);
+
+                if (affectedRows == 0)
+                {
+                    return null;
+                }
+
+                
+                const string selectQuery = "SELECT ClaimId, ClaimType, ClaimValue FROM [Claims] WHERE ClaimId = @ClaimId";
+                var updatedClaim = await connection.QuerySingleOrDefaultAsync<Claim>(selectQuery, new { ClaimId = request.ClaimId });
+
+                return updatedClaim;
+            }
+        }
+
+        public async Task<PagedResultResponse<Claim>> GetClaimsAsync(int pageNumber, int pageSize, string? search = null)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Calculate the number of records to skip
+                var skip = (pageNumber - 1) * pageSize;
+
+                // Define the query with pagination and search
+                var queryBuilder = new StringBuilder(@"
+                SELECT ClaimId, ClaimType, ClaimValue
+                FROM [Claims]
+                ");
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    queryBuilder.Append("WHERE ClaimType LIKE @Search OR ClaimValue LIKE @Search ");
+                }
+
+                queryBuilder.Append(@"
+                ORDER BY ClaimType
+                OFFSET @Skip ROWS
+                FETCH NEXT @PageSize ROWS ONLY;
+
+                SELECT COUNT(*)
+                FROM [Claims]
+                ");
+
+                var query = queryBuilder.ToString();
+
+                
+                using (var multi = await connection.QueryMultipleAsync(query, new
+                {
+                    Search = $"%{search}%",
+                    Skip = skip,
+                    PageSize = pageSize
+                }))
+                {
+                    var claims = multi.Read<Claim>().ToList();
+                    var totalRecords = multi.ReadSingle<int>();
+
+                    return new PagedResultResponse<Claim>
+                    {
+                        Items = claims,
+                        TotalCount = totalRecords,
+                        PageNumber = pageNumber,
+                        PageSize = pageSize
+                    };
+                }
+            }
+        }
+
+
+        public async Task<Claim?> GetClaimByIdAsync(int claimId)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                const string query = "SELECT ClaimId, ClaimType, ClaimValue FROM [Claims] WHERE ClaimId = @ClaimId";
+
+                var claim = await connection.QuerySingleOrDefaultAsync<Claim>(query, new { ClaimId = claimId });
+
+                return claim;
+            }
+        }
+
+        public async Task DeleteClaimAsync(int claimId)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        
+                        const string checkQuery = "SELECT COUNT(*) FROM Claims WHERE ClaimId = @ClaimId";
+                        var exists = await connection.ExecuteScalarAsync<int>(checkQuery, new { ClaimId = claimId }, transaction);
+
+                        if (exists == 0)
+                        {
+                            throw new ItemDoesNotExistException(claimId);
+                        }
+
+                       
+                        await connection.ExecuteAsync("DELETE FROM UserClaims WHERE ClaimId = @ClaimId", new { ClaimId = claimId }, transaction);
+                        await connection.ExecuteAsync("DELETE FROM RoleClaims WHERE ClaimId = @ClaimId", new { ClaimId = claimId }, transaction);
+
+                       
+                        await connection.ExecuteAsync("DELETE FROM Claims WHERE ClaimId = @ClaimId", new { ClaimId = claimId }, transaction);
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        throw; 
+                    }
+                }
+            }
+        }
+
+        public async Task DeleteRoleAsync(int roleId)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        
+                        const string checkQuery = "SELECT COUNT(*) FROM Roles WHERE RoleId = @RoleId";
+                        var exists = await connection.ExecuteScalarAsync<int>(checkQuery, new { RoleId = roleId }, transaction);
+
+                        if (exists == 0)
+                        {
+                            throw new ItemDoesNotExistException(roleId);
+                        }
+
+                        
+                        await connection.ExecuteAsync("DELETE FROM UserRoles WHERE RoleId = @RoleId", new { RoleId = roleId }, transaction);
+                        await connection.ExecuteAsync("DELETE FROM RoleClaims WHERE RoleId = @RoleId", new { RoleId = roleId }, transaction);
+
+                        
+                        await connection.ExecuteAsync("DELETE FROM Roles WHERE RoleId = @RoleId", new { RoleId = roleId }, transaction);
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        throw; 
+                    }
+                }
+            }
+        }
+
+        public async Task<Role?> GetRoleAsync(int roleId)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                const string query = "SELECT RoleId, RoleName FROM Roles WHERE RoleId = @RoleId";
+
+                return await connection.QuerySingleOrDefaultAsync<Role>(query, new { RoleId = roleId });
+            }
+        }
+
+        public async Task<bool> AddRoleToUserAsync(AddRoleToUserRequest request)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                const string checkUserQuery = "SELECT COUNT(*) FROM [User] WHERE UserId = @UserId";
+                const string checkRoleQuery = "SELECT COUNT(*) FROM [Roles] WHERE RoleId = @RoleId";
+                const string checkUserRoleQuery = "SELECT COUNT(*) FROM UserRoles WHERE UserId = @UserId AND RoleId = @RoleId";
+
+                var userExists = await connection.ExecuteScalarAsync<int>(checkUserQuery, new { UserId = request.UserId });
+                var roleExists = await connection.ExecuteScalarAsync<int>(checkRoleQuery, new { RoleId = request.RoleId });
+                var userRoleExists = await connection.ExecuteScalarAsync<int>(checkUserRoleQuery, new { UserId = request.UserId, RoleId = request.RoleId });
+
+                if (userExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"User with UserId:{request.UserId} does not exist");
+                }
+
+                if (roleExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"Role with RoleId:{request.RoleId} does not exist");
+                }
+
+                if (userRoleExists > 0)
+                {
+                    throw new ItemAlreadyExistsException($"User with userId:{request.UserId} was already assigned this role with roleId:{request.RoleId}");
+                }
+
+                const string insertQuery = @"
+                INSERT INTO UserRoles (UserId, RoleId)
+                VALUES (@UserId, @RoleId);";
+
+                await connection.ExecuteAsync(insertQuery, request);
+                return true;
+            }
+        }
+
+        public async Task<bool> RemoveRoleFromUserAsync(RemoveRoleFromUserRequest request)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Check if the role exists for the user
+                const string checkQuery = @"
+            SELECT COUNT(*)
+            FROM UserRoles
+            WHERE UserId = @UserId AND RoleId = @RoleId";
+
+                var existingCount = await connection.ExecuteScalarAsync<int>(checkQuery, new { UserId = request.UserId, RoleId = request.RoleId });
+
+                if (existingCount == 0)
+                {
+                    throw new ItemDoesNotExistException($"Role ID {request.RoleId} is not assigned to User ID {request.UserId}.");
+                }
+
+                // Remove the role from the user
+                const string deleteQuery = @"
+            DELETE FROM UserRoles
+            WHERE UserId = @UserId AND RoleId = @RoleId";
+
+                var affectedRows = await connection.ExecuteAsync(deleteQuery, new { UserId = request.UserId, RoleId = request.RoleId });
+
+                return affectedRows > 0;
+            }
+        }
+
+        public async Task<PagedResultResponse<UserRoleResponse>> GetUserRolesAsync(int pageNumber, int pageSize, string? search = null)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Calculate the number of records to skip
+                var skip = (pageNumber - 1) * pageSize;
+
+                // Define the base query with pagination
+                var query = new StringBuilder(@"
+        SELECT u.UserId, u.Username, u.Email, r.RoleId, r.RoleName
+        FROM [User] u
+        JOIN UserRoles ur ON u.UserId = ur.UserId
+        JOIN Roles r ON ur.RoleId = r.RoleId
+        WHERE 1=1");
+
+                // Add search condition if search term is provided
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query.Append(@"
+            AND (u.Username LIKE @Search
+            OR u.Email LIKE @Search
+            OR u.FullName LIKE @Search
+            OR r.RoleName LIKE @Search)");
+                }
+
+                // Add pagination and ordering
+                query.Append(@"
+        ORDER BY u.Username
+        OFFSET @Skip ROWS
+        FETCH NEXT @PageSize ROWS ONLY;
+
+        SELECT COUNT(*)
+        FROM [User] u
+        JOIN UserRoles ur ON u.UserId = ur.UserId
+        JOIN Roles r ON ur.RoleId = r.RoleId
+        WHERE 1=1");
+
+                // Add search condition to count query if search term is provided
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query.Append(@"
+            AND (u.Username LIKE @Search
+            OR u.Email LIKE @Search
+            OR u.FullName LIKE @Search
+            OR r.RoleName LIKE @Search)");
+                }
+
+                // Execute the query
+                using (var multi = await connection.QueryMultipleAsync(query.ToString(), new
+                {
+                    Skip = skip,
+                    PageSize = pageSize,
+                    Search = $"%{search}%"
+                }))
+                {
+                    var userRoles = multi.Read<UserRoleResponse>().ToList();
+                    var totalRecords = multi.ReadSingle<int>();
+
+                    return new PagedResultResponse<UserRoleResponse>
+                    {
+                        Items = userRoles,
+                        TotalCount = totalRecords,
+                        PageNumber = pageNumber,
+                        PageSize = pageSize
+                    };
+                }
+            }
+        }
+
+
 
 
 

@@ -1,5 +1,6 @@
 ﻿using Domain.Authentication.Requests;
-using Domain.Common;
+using Domain.Authentication.Responses;
+using Domain.Common.Responses;
 using Domain.Core.Models;
 using System;
 using System.Collections.Generic;
@@ -36,5 +37,17 @@ namespace Application.Authentication.Abstractions
         Task<int> AddRoleAsync(Role newRole);
         Task<Role?> UpdateRoleAsync(UpdateRoleRequest roleRequest);
         Task<PagedResultResponse<Role>> GetRolesAsync(int page, int pageSize, string? search = null);
+        Task<int> AddClaimAsync(AddClaimRequest claim);
+        Task<Claim?> UpdateClaimAsync(UpdateClaimRequest request);
+        Task<PagedResultResponse<Claim>> GetClaimsAsync(int pageNumber, int pageSize, string? search = null);
+        Task<Claim?> GetClaimByIdAsync(int claimId);
+        Task DeleteClaimAsync(int claimId);
+        Task DeleteRoleAsync(int roleId);
+        Task<Role?> GetRoleAsync(int roleId);
+        Task<bool> AddRoleToUserAsync(AddRoleToUserRequest request);
+        Task<bool> RemoveRoleFromUserAsync(RemoveRoleFromUserRequest request);
+        Task<PagedResultResponse<UserRoleResponse>> GetUserRolesAsync(int pageNumber, int pageSize, string? search = null);
+
+
     }
 }
