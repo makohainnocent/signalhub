@@ -14,6 +14,9 @@ using Application.Common.Abstractions;
 using System.Security.Claims;
 using Serilog;
 using Microsoft.AspNetCore.Http;
+using Domain.Core.Models;
+using DataAccess.Authentication.Exceptions;
+using System.Data;
 
 
 namespace Api.Authentication.EndPointDefinitions
@@ -101,11 +104,11 @@ namespace Api.Authentication.EndPointDefinitions
             })
             .RequireAuthorization();
 
-            auth.MapGet("/get-users", async (IAuthenticationRepository repo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10) =>
+            auth.MapGet("/get-users-all", async (IAuthenticationRepository repo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null) =>
             {
-                return await AuthenticationControllers.GetUsers(repo, pageNumber, pageSize);
-            })
-            .RequireAuthorization();
+                return await AuthenticationControllers.GetUsersAll(repo, pageNumber, pageSize, search);
+            });
+            //.RequireAuthorization();
 
             auth.MapDelete("/delete-user/{userId:int}", async (IAuthenticationRepository repo, int userId, HttpContext httpContext) =>
             {
@@ -116,7 +119,23 @@ namespace Api.Authentication.EndPointDefinitions
             })
             .RequireAuthorization("AdminOnly");
 
+            auth.MapPost("/add-role", async (IAuthenticationRepository repo, RoleRequest roleRequest) =>
+            {
+                return await AuthenticationControllers.AddRole(repo, roleRequest);
+            });
+            //.RequireAuthorization();
 
+            auth.MapPut("/update-role", async (IAuthenticationRepository repo, UpdateRoleRequest roleRequest) =>
+            {
+                return await AuthenticationControllers.UpdateRole(repo, roleRequest);
+            });
+            //.RequireAuthorization();
+
+            auth.MapGet("/get-roles-all", async (IAuthenticationRepository repo, int page = 1, int pageSize = 10, string? search = null) =>
+            {
+                return await AuthenticationControllers.GetRolesAll(repo, page, pageSize, search);
+            });
+            //.RequireAuthorization();
         }
     }
     

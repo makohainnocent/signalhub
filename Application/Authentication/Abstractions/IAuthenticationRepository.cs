@@ -31,8 +31,10 @@ namespace Application.Authentication.Abstractions
         Task<bool> ValidatePassword(string email, string password);
         Task UpdateUser(int userId, UpdateUserRequest request);
         Task<User> GetUserByUsernameAsync(string username);
-        Task<PagedResultResponse<User>> GetUsersAsync(int pageNumber, int pageSize);
+        Task<PagedResultResponse<User>> GetUsersAsync(int pageNumber, int pageSize, string? search = null);
         Task DeleteUserAsync(int userId);
-
+        Task<int> AddRoleAsync(Role newRole);
+        Task<Role?> UpdateRoleAsync(UpdateRoleRequest roleRequest);
+        Task<PagedResultResponse<Role>> GetRolesAsync(int page, int pageSize, string? search = null);
     }
 }

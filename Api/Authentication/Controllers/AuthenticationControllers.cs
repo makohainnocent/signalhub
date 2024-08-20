@@ -9,6 +9,7 @@ using Serilog;
 using Api.Authentication.Utilities;
 using Application.Common.Abstractions;
 using System.Security.Claims;
+using Domain.Common;
 
 namespace Api.Authentication.Controllers
 {
@@ -259,9 +260,9 @@ namespace Api.Authentication.Controllers
             }
         }
 
-        public static async Task<IResult> GetUsers(IAuthenticationRepository repo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public static async Task<IResult> GetUsersAll(IAuthenticationRepository repo, int pageNumber = 1, int pageSize = 10, string? search = null)
         {
-            // Validate query parameters
+            
             if (pageNumber <= 0)
             {
                 return Results.BadRequest(new { message = "Page number must be greater than 0." });
@@ -274,8 +275,8 @@ namespace Api.Authentication.Controllers
 
             try
             {
-                // Fetch paged users from the repository
-                var pagedResult = await repo.GetUsersAsync(pageNumber, pageSize);
+                
+                var pagedResult = await repo.GetUsersAsync(pageNumber, pageSize, search);
 
                 return Results.Ok(pagedResult);
             }
@@ -285,6 +286,7 @@ namespace Api.Authentication.Controllers
                 return Results.Problem(ex.Message);
             }
         }
+
 
         public static async Task<IResult> DeleteUser(IAuthenticationRepository repo, int userId)
         {
@@ -312,6 +314,97 @@ namespace Api.Authentication.Controllers
         }
 
 
+        public static async Task<IResult> AddRole(IAuthenticationRepository repo, RoleRequest roleRequest)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(roleRequest.RoleName))
+                {
+                    return Results.BadRequest(new { message = "RoleName cannot be empty." });
+                }
+
+                var newRole = new Role
+                {
+                    RoleName = roleRequest.RoleName
+                };
+
+                var roleId = await repo.AddRoleAsync(newRole);
+                return Results.Ok(new { message = "Role added successfully.", RoleId = roleId });
+            }
+            catch (RoleAlreadyExistsException ex)
+            {
+
+                return Results.Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while adding the role.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> UpdateRole(IAuthenticationRepository repo, UpdateRoleRequest roleRequest)
+        {
+            try
+            {
+                if (roleRequest.RoleId <= 0)
+                {
+                    return Results.BadRequest(new { message = "Invalid RoleId." });
+                }
+
+                if (string.IsNullOrWhiteSpace(roleRequest.RoleName))
+                {
+                    return Results.BadRequest(new { message = "RoleName cannot be empty." });
+                }
+
+                var updatedRole = await repo.UpdateRoleAsync(roleRequest);
+
+                if (updatedRole == null)
+                {
+                    return Results.NotFound(new { message = "Role not found." });
+                }
+
+                return Results.Ok(updatedRole);
+            }
+            catch (RoleAlreadyExistsException ex)
+            {
+                return Results.Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while updating the role.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> GetRolesAll(IAuthenticationRepository repo, int page = 1, int pageSize = 10, string? search = null)
+        {
+            try
+            {
+                
+                if (page < 1 || pageSize < 1)
+                {
+                    return Results.BadRequest(new { message = "Page and PageSize must be greater than 0." });
+                }
+
+                
+                var pagedResult = await repo.GetRolesAsync(page, pageSize, search);
+
+                
+                if (!pagedResult.Items.Any())
+                {
+                    return Results.NotFound(new { message = "No roles found." });
+                }
+
+                
+                return Results.Ok(pagedResult);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while retrieving the roles.");
+                return Results.Problem(ex.Message);
+            }
+        }
 
 
     }

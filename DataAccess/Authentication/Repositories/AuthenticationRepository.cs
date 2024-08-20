@@ -380,7 +380,7 @@ namespace DataAccess.Authentication.Repositories
             }
         }
 
-        public async Task<PagedResultResponse<User>> GetUsersAsync(int pageNumber, int pageSize)
+        public async Task<PagedResultResponse<User>> GetUsersAsync(int pageNumber, int pageSize, string? search = null)
         {
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
@@ -389,19 +389,49 @@ namespace DataAccess.Authentication.Repositories
                 // Calculate the number of records to skip
                 var skip = (pageNumber - 1) * pageSize;
 
-                // Define the query with pagination
-                const string query = @"
+                // Define the base query with pagination
+                var query = new StringBuilder(@"
                 SELECT *
                 FROM [User]
+                WHERE 1=1");
+
+                // Add search condition if search term is provided
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query.Append(@"
+                    AND (Username LIKE @Search
+                    OR Email LIKE @Search
+                    OR FullName LIKE @Search
+                    OR Address LIKE @Search)");
+                }
+
+                // Add pagination and ordering
+                query.Append(@"
                 ORDER BY Username
                 OFFSET @Skip ROWS
                 FETCH NEXT @PageSize ROWS ONLY;
-            
+    
                 SELECT COUNT(*)
-                FROM [User];";
+                FROM [User]
+                WHERE 1=1");
 
-                // Execute the query and retrieve results
-                using (var multi = await connection.QueryMultipleAsync(query, new { Skip = skip, PageSize = pageSize }))
+                // Add search condition to count query if search term is provided
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query.Append(@"
+                    AND (Username LIKE @Search
+                    OR Email LIKE @Search
+                    OR FullName LIKE @Search
+                    OR Address LIKE @Search)");
+                }
+
+                
+                using (var multi = await connection.QueryMultipleAsync(query.ToString(), new
+                {
+                    Skip = skip,
+                    PageSize = pageSize,
+                    Search = $"%{search}%"
+                }))
                 {
                     var users = multi.Read<User>().ToList();
                     var totalRecords = multi.ReadSingle<int>();
@@ -416,6 +446,7 @@ namespace DataAccess.Authentication.Repositories
                 }
             }
         }
+
 
         public async Task DeleteUserAsync(int userId)
         {
@@ -436,6 +467,116 @@ namespace DataAccess.Authentication.Repositories
                 }
             }
         }
+
+        public async Task<int> AddRoleAsync(Role newRole)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Check if a role with the same name already exists
+                const string checkQuery = "SELECT COUNT(1) FROM [Roles] WHERE RoleName = @RoleName";
+                var exists = await connection.ExecuteScalarAsync<bool>(checkQuery, new { newRole.RoleName });
+
+                if (exists)
+                {
+                    throw new RoleAlreadyExistsException(newRole.RoleName);
+                }
+
+                // If not, insert the new role
+                const string insertQuery = @"
+                INSERT INTO [Roles] (RoleName)
+                VALUES (@RoleName);
+                SELECT CAST(SCOPE_IDENTITY() as int)";
+
+                var roleId = await connection.QuerySingleAsync<int>(insertQuery, new { newRole.RoleName });
+
+                return roleId;
+            }
+        }
+
+
+        public async Task<Role?> UpdateRoleAsync(UpdateRoleRequest roleRequest)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Check if a role with the new name already exists (excluding the current role being updated)
+                const string checkQuery = @"
+                SELECT COUNT(1) 
+                FROM [Roles] 
+                WHERE RoleName = @RoleName AND RoleId != @RoleId";
+
+                var exists = await connection.ExecuteScalarAsync<bool>(checkQuery, new { RoleName = roleRequest.RoleName, RoleId = roleRequest.RoleId });
+
+                if (exists)
+                {
+                    throw new RoleAlreadyExistsException(roleRequest.RoleName);
+                }
+
+                
+                const string updateQuery = @"
+                UPDATE [Roles]
+                SET RoleName = @RoleName
+                WHERE RoleId = @RoleId;
+
+                SELECT RoleId, RoleName
+                FROM [Roles]
+                WHERE RoleId = @RoleId";
+
+                var updatedRole = await connection.QuerySingleOrDefaultAsync<Role>(updateQuery, new { RoleName = roleRequest.RoleName, RoleId = roleRequest.RoleId });
+
+                return updatedRole;
+            }
+        }
+
+        public async Task<PagedResultResponse<Role>> GetRolesAsync(int page, int pageSize, string? search = null)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                
+                var query = new StringBuilder("SELECT RoleId, RoleName FROM [Roles]");
+                var countQuery = new StringBuilder("SELECT COUNT(*) FROM [Roles]");
+
+                
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query.Append(" WHERE RoleName LIKE @Search");
+                    countQuery.Append(" WHERE RoleName LIKE @Search");
+                }
+
+                
+                query.Append(" ORDER BY RoleName OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY");
+
+                
+                var roles = await connection.QueryAsync<Role>(query.ToString(), new
+                {
+                    Search = $"%{search}%",
+                    Offset = (page - 1) * pageSize,
+                    PageSize = pageSize
+                });
+
+                
+                var totalCount = await connection.ExecuteScalarAsync<int>(countQuery.ToString(), new
+                {
+                    Search = $"%{search}%"
+                });
+
+                
+                return new PagedResultResponse<Role>
+                {
+                    Items = roles,
+                    TotalCount = totalCount,
+                    PageNumber = page,
+                    PageSize = pageSize
+                };
+            }
+        }
+
+
 
 
 
