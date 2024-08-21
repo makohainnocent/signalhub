@@ -47,6 +47,13 @@ namespace Application.Authentication.Abstractions
         Task<bool> AddRoleToUserAsync(AddRoleToUserRequest request);
         Task<bool> RemoveRoleFromUserAsync(RemoveRoleFromUserRequest request);
         Task<PagedResultResponse<UserRoleResponse>> GetUserRolesAsync(int pageNumber, int pageSize, string? search = null);
+        Task<bool> AddClaimToRoleAsync(AddClaimToRoleRequest request);
+        Task<bool> RemoveClaimFromRoleAsync(RemoveClaimFromRoleRequest request);
+        Task<IEnumerable<RoleClaimResponse>> GetClaimsByRoleIdAsync(int roleId);
+        Task<PagedResultResponse<RoleClaimResponse>> GetRoleClaimsAsync(int pageNumber, int pageSize, string? search = null);
+        Task<bool> AddClaimToUserAsync(AddClaimToUserRequest request);
+        Task<bool> RemoveClaimFromUserAsync(RemoveClaimFromUserRequest request);
+        Task<PagedResultResponse<UserClaimResponse>> GetUserClaimsAsync(int pageNumber, int pageSize, string? search = null);
 
 
     }

@@ -110,9 +110,15 @@ namespace Api.Core.Extensions
 
             builder.Services.AddAuthorization(options =>
             {
-                options.AddPolicy("AdminOnly", policy =>
-                    policy.RequireRole("Admin"));
+                options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("UserManagement", policy => policy.RequireClaim("Permission", "UserManagement"));
+                options.AddPolicy("RoleManagement", policy => policy.RequireClaim("Permission", "RoleManagement"));
+                options.AddPolicy("ClaimManagement", policy => policy.RequireClaim("Permission", "ClaimManagement"));
+                options.AddPolicy("UserRoleManagement", policy => policy.RequireClaim("Permission", "UserRoleManagement"));
+                options.AddPolicy("RoleClaimManagement", policy => policy.RequireClaim("Permission", "RoleClaimManagement"));
+                options.AddPolicy("UserClaimManagement", policy => policy.RequireClaim("Permission", "UserClaimManagement"));
             });
+
 
 
             var secretKey = jwtSettings["SecretKey"];

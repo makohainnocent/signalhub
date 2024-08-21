@@ -924,42 +924,42 @@ namespace DataAccess.Authentication.Repositories
 
                 // Define the base query with pagination
                 var query = new StringBuilder(@"
-        SELECT u.UserId, u.Username, u.Email, r.RoleId, r.RoleName
-        FROM [User] u
-        JOIN UserRoles ur ON u.UserId = ur.UserId
-        JOIN Roles r ON ur.RoleId = r.RoleId
-        WHERE 1=1");
+                SELECT u.UserId, u.Username, u.Email, r.RoleId, r.RoleName
+                FROM [User] u
+                JOIN UserRoles ur ON u.UserId = ur.UserId
+                JOIN Roles r ON ur.RoleId = r.RoleId
+                WHERE 1=1");
 
                 // Add search condition if search term is provided
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     query.Append(@"
-            AND (u.Username LIKE @Search
-            OR u.Email LIKE @Search
-            OR u.FullName LIKE @Search
-            OR r.RoleName LIKE @Search)");
+                    AND (u.Username LIKE @Search
+                    OR u.Email LIKE @Search
+                    OR u.FullName LIKE @Search
+                    OR r.RoleName LIKE @Search)");
                 }
 
                 // Add pagination and ordering
                 query.Append(@"
-        ORDER BY u.Username
-        OFFSET @Skip ROWS
-        FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY u.Username
+                OFFSET @Skip ROWS
+                FETCH NEXT @PageSize ROWS ONLY;
 
-        SELECT COUNT(*)
-        FROM [User] u
-        JOIN UserRoles ur ON u.UserId = ur.UserId
-        JOIN Roles r ON ur.RoleId = r.RoleId
-        WHERE 1=1");
+                SELECT COUNT(*)
+                FROM [User] u
+                JOIN UserRoles ur ON u.UserId = ur.UserId
+                JOIN Roles r ON ur.RoleId = r.RoleId
+                WHERE 1=1");
 
                 // Add search condition to count query if search term is provided
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     query.Append(@"
-            AND (u.Username LIKE @Search
-            OR u.Email LIKE @Search
-            OR u.FullName LIKE @Search
-            OR r.RoleName LIKE @Search)");
+                    AND (u.Username LIKE @Search
+                    OR u.Email LIKE @Search
+                    OR u.FullName LIKE @Search
+                    OR r.RoleName LIKE @Search)");
                 }
 
                 // Execute the query
@@ -976,6 +976,385 @@ namespace DataAccess.Authentication.Repositories
                     return new PagedResultResponse<UserRoleResponse>
                     {
                         Items = userRoles,
+                        TotalCount = totalRecords,
+                        PageNumber = pageNumber,
+                        PageSize = pageSize
+                    };
+                }
+            }
+        }
+
+        public async Task<bool> AddClaimToRoleAsync(AddClaimToRoleRequest request)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Check if the role exists
+                const string checkRoleExistsQuery = @"
+                SELECT COUNT(*)
+                FROM Roles
+                WHERE RoleId = @RoleId";
+
+                var roleExists = await connection.ExecuteScalarAsync<int>(checkRoleExistsQuery, new
+                {
+                    request.RoleId
+                });
+
+                if (roleExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"The role with ID {request.RoleId} does not exist.");
+                }
+
+                // Check if the claim exists
+                const string checkClaimExistsQuery = @"
+                SELECT COUNT(*)
+                FROM Claims
+                WHERE ClaimId = @ClaimId";
+
+                var claimExists = await connection.ExecuteScalarAsync<int>(checkClaimExistsQuery, new
+                {
+                    request.ClaimId
+                });
+
+                if (claimExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"The claim with ID {request.ClaimId} does not exist.");
+                }
+
+                // Check if the claim is already associated with the role
+                const string checkRoleClaimExistsQuery = @"
+                SELECT COUNT(*)
+                FROM RoleClaims
+                WHERE RoleId = @RoleId AND ClaimId = @ClaimId";
+
+                var roleClaimExists = await connection.ExecuteScalarAsync<int>(checkRoleClaimExistsQuery, new
+                {
+                    request.RoleId,
+                    request.ClaimId
+                });
+
+                if (roleClaimExists > 0)
+                {
+                    throw new ItemAlreadyExistsException("This claim is already associated with the role.");
+                }
+
+                // Associate the claim with the role
+                const string insertRoleClaimQuery = @"
+                INSERT INTO RoleClaims (RoleId, ClaimId)
+                VALUES (@RoleId, @ClaimId);";
+
+                var rowsAffected = await connection.ExecuteAsync(insertRoleClaimQuery, new
+                {
+                    request.RoleId,
+                    request.ClaimId
+                });
+
+                return rowsAffected > 0;
+            }
+        }
+
+        public async Task<bool> RemoveClaimFromRoleAsync(RemoveClaimFromRoleRequest request)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Check if the role exists
+                const string checkRoleExistsQuery = @"
+                SELECT COUNT(*)
+                FROM Roles
+                WHERE RoleId = @RoleId";
+
+                var roleExists = await connection.ExecuteScalarAsync<int>(checkRoleExistsQuery, new
+                {
+                    request.RoleId
+                });
+
+                if (roleExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"The role with ID {request.RoleId} does not exist.");
+                }
+
+                // Check if the claim exists
+                const string checkClaimExistsQuery = @"
+                SELECT COUNT(*)
+                FROM Claims
+                WHERE ClaimId = @ClaimId";
+
+                var claimExists = await connection.ExecuteScalarAsync<int>(checkClaimExistsQuery, new
+                {
+                    request.ClaimId
+                });
+
+                if (claimExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"The claim with ID {request.ClaimId} does not exist.");
+                }
+
+                // Check if the claim is associated with the role
+                const string checkRoleClaimExistsQuery = @"
+                SELECT COUNT(*)
+                FROM RoleClaims
+                WHERE RoleId = @RoleId AND ClaimId = @ClaimId";
+
+                var roleClaimExists = await connection.ExecuteScalarAsync<int>(checkRoleClaimExistsQuery, new
+                {
+                    request.RoleId,
+                    request.ClaimId
+                });
+
+                if (roleClaimExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"The claim with ID {request.ClaimId} is not associated with the role.");
+                }
+
+                // Remove the claim from the role
+                const string deleteRoleClaimQuery = @"
+                DELETE FROM RoleClaims
+                WHERE RoleId = @RoleId AND ClaimId = @ClaimId;";
+
+                var rowsAffected = await connection.ExecuteAsync(deleteRoleClaimQuery, new
+                {
+                    request.RoleId,
+                    request.ClaimId
+                });
+
+                return rowsAffected > 0;
+            }
+        }
+
+        public async Task<IEnumerable<RoleClaimResponse>> GetClaimsByRoleIdAsync(int roleId)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Retrieve the role and its associated claims
+                const string query = @"
+                SELECT r.RoleId, r.RoleName, c.ClaimId, c.ClaimType, c.ClaimValue
+                FROM RoleClaims rc
+                JOIN Claims c ON rc.ClaimId = c.ClaimId
+                JOIN Roles r ON rc.RoleId = r.RoleId
+                WHERE r.RoleId = @RoleId";
+
+                var roleClaims = await connection.QueryAsync<RoleClaimResponse>(query, new
+                {
+                    RoleId = roleId
+                });
+
+                if (!roleClaims.Any())
+                {
+                    throw new ItemDoesNotExistException($"The role with ID {roleId} does not exist or has no associated claims.");
+                }
+
+                return roleClaims;
+            }
+        }
+
+        public async Task<PagedResultResponse<RoleClaimResponse>> GetRoleClaimsAsync(int pageNumber, int pageSize, string? search = null)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                
+                var skip = (pageNumber - 1) * pageSize;
+
+                
+                var query = new StringBuilder(@"
+                SELECT r.RoleId, r.RoleName, c.ClaimId, c.ClaimType, c.ClaimValue
+                FROM RoleClaims rc
+                JOIN Roles r ON rc.RoleId = r.RoleId
+                JOIN Claims c ON rc.ClaimId = c.ClaimId
+                WHERE 1=1");
+
+               
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query.Append(@"
+                    AND (r.RoleName LIKE @Search
+                    OR c.ClaimType LIKE @Search
+                    OR c.ClaimValue LIKE @Search)");
+                }
+
+                
+                query.Append(@"
+                ORDER BY r.RoleName, c.ClaimType
+                OFFSET @Skip ROWS
+                FETCH NEXT @PageSize ROWS ONLY;
+
+                SELECT COUNT(*)
+                FROM RoleClaims rc
+                JOIN Roles r ON rc.RoleId = r.RoleId
+                JOIN Claims c ON rc.ClaimId = c.ClaimId
+                WHERE 1=1");
+
+                
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query.Append(@"
+                    AND (r.RoleName LIKE @Search
+                    OR c.ClaimType LIKE @Search
+                    OR c.ClaimValue LIKE @Search)");
+                }
+
+                
+                using (var multi = await connection.QueryMultipleAsync(query.ToString(), new
+                {
+                    Skip = skip,
+                    PageSize = pageSize,
+                    Search = $"%{search}%"
+                }))
+                {
+                    var roleClaims = multi.Read<RoleClaimResponse>().ToList();
+                    var totalRecords = multi.ReadSingle<int>();
+
+                    return new PagedResultResponse<RoleClaimResponse>
+                    {
+                        Items = roleClaims,
+                        TotalCount = totalRecords,
+                        PageNumber = pageNumber,
+                        PageSize = pageSize
+                    };
+                }
+            }
+        }
+
+        public async Task<bool> AddClaimToUserAsync(AddClaimToUserRequest request)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                
+                const string checkUserQuery = "SELECT COUNT(*) FROM [User] WHERE UserId = @UserId";
+                const string checkClaimQuery = "SELECT COUNT(*) FROM [Claims] WHERE ClaimId = @ClaimId";
+                const string checkUserClaimQuery = "SELECT COUNT(*) FROM UserClaims WHERE UserId = @UserId AND ClaimId = @ClaimId";
+
+                var userExists = await connection.ExecuteScalarAsync<int>(checkUserQuery, new { UserId = request.UserId });
+                var claimExists = await connection.ExecuteScalarAsync<int>(checkClaimQuery, new { ClaimId = request.ClaimId });
+                var userClaimExists = await connection.ExecuteScalarAsync<int>(checkUserClaimQuery, new { UserId = request.UserId, ClaimId = request.ClaimId });
+
+                if (userExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"User with UserId:{request.UserId} does not exist.");
+                }
+
+                if (claimExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"Claim with ClaimId:{request.ClaimId} does not exist.");
+                }
+
+                if (userClaimExists > 0)
+                {
+                    throw new ItemAlreadyExistsException($"User with UserId:{request.UserId} already has the claim with ClaimId:{request.ClaimId}.");
+                }
+
+                
+                const string insertQuery = @"
+                INSERT INTO UserClaims (UserId, ClaimId)
+                VALUES (@UserId, @ClaimId);";
+
+                await connection.ExecuteAsync(insertQuery, request);
+                return true;
+            }
+        }
+
+        public async Task<bool> RemoveClaimFromUserAsync(RemoveClaimFromUserRequest request)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                const string checkUserQuery = "SELECT COUNT(*) FROM [User] WHERE UserId = @UserId";
+                const string checkClaimQuery = "SELECT COUNT(*) FROM [Claims] WHERE ClaimId = @ClaimId";
+                const string checkUserClaimQuery = "SELECT COUNT(*) FROM UserClaims WHERE UserId = @UserId AND ClaimId = @ClaimId";
+
+                var userExists = await connection.ExecuteScalarAsync<int>(checkUserQuery, new { UserId = request.UserId });
+                var claimExists = await connection.ExecuteScalarAsync<int>(checkClaimQuery, new { ClaimId = request.ClaimId });
+                var userClaimExists = await connection.ExecuteScalarAsync<int>(checkUserClaimQuery, new { UserId = request.UserId, ClaimId = request.ClaimId });
+
+                if (userExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"User with UserId:{request.UserId} does not exist");
+                }
+
+                if (claimExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"Claim with ClaimId:{request.ClaimId} does not exist");
+                }
+
+                if (userClaimExists == 0)
+                {
+                    throw new ItemDoesNotExistException($"Claim with ClaimId:{request.ClaimId} is not assigned to User with UserId:{request.UserId}");
+                }
+
+                const string deleteQuery = @"
+                DELETE FROM UserClaims
+                WHERE UserId = @UserId AND ClaimId = @ClaimId;";
+
+                var affectedRows = await connection.ExecuteAsync(deleteQuery, request);
+                return affectedRows > 0;
+            }
+        }
+
+
+        public async Task<PagedResultResponse<UserClaimResponse>> GetUserClaimsAsync(int pageNumber, int pageSize, string? search = null)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                var skip = (pageNumber - 1) * pageSize;
+
+                var query = new StringBuilder(@"
+                SELECT u.UserId, u.Username, c.ClaimId, c.ClaimType, c.ClaimValue
+                FROM UserClaims uc
+                JOIN [User] u ON uc.UserId = u.UserId
+                JOIN Claims c ON uc.ClaimId = c.ClaimId
+                WHERE 1=1");
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query.Append(@"
+                    AND (u.Username LIKE @Search
+                    OR c.ClaimType LIKE @Search
+                    OR c.ClaimValue LIKE @Search)");
+                }
+
+                query.Append(@"
+                ORDER BY u.Username, c.ClaimType
+                OFFSET @Skip ROWS
+                FETCH NEXT @PageSize ROWS ONLY;
+
+                SELECT COUNT(*)
+                FROM UserClaims uc
+                JOIN [User] u ON uc.UserId = u.UserId
+                JOIN Claims c ON uc.ClaimId = c.ClaimId
+                WHERE 1=1");
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query.Append(@"
+                    AND (u.Username LIKE @Search
+                    OR c.ClaimType LIKE @Search
+                    OR c.ClaimValue LIKE @Search)");
+                }
+
+                using (var multi = await connection.QueryMultipleAsync(query.ToString(), new
+                {
+                    Skip = skip,
+                    PageSize = pageSize,
+                    Search = $"%{search}%"
+                }))
+                {
+                    var userClaims = multi.Read<UserClaimResponse>().ToList();
+                    var totalRecords = multi.ReadSingle<int>();
+
+                    return new PagedResultResponse<UserClaimResponse>
+                    {
+                        Items = userClaims,
                         TotalCount = totalRecords,
                         PageNumber = pageNumber,
                         PageSize = pageSize
