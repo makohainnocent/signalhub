@@ -16,6 +16,7 @@ using DataAccess.Authentication.Exceptions;
 using System.Transactions;
 using Domain.Common.Responses;
 using Domain.Authentication.Responses;
+using DataAccess.Common.Exceptions;
 
 
 namespace DataAccess.Authentication.Repositories

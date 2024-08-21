@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Authentication.Exceptions
+namespace DataAccess.Common.Exceptions
 {
     public class ItemDoesNotExistException : Exception
     {

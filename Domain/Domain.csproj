@@ -11,4 +11,27 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="AquacultureManagement\Requests\" />
+    <Folder Include="AquacultureManagement\Responses\" />
+    <Folder Include="ComplianceManagement\Requests\" />
+    <Folder Include="ComplianceManagement\Responses\" />
+    <Folder Include="FeedBussinessManagement\Requests\" />
+    <Folder Include="FeedBussinessManagement\Responses\" />
+    <Folder Include="VeterinaryManagement\Requests\" />
+    <Folder Include="VeterinaryManagement\Responses\" />
+    <Folder Include="TransporterManagement\Requests\" />
+    <Folder Include="TransporterManagement\Responses\" />
+    <Folder Include="InspectionManagement\Requests\" />
+    <Folder Include="InspectionManagement\Responses\" />
+    <Folder Include="PermitManagement\Requests\" />
+    <Folder Include="PermitManagement\Responses\" />
+    <Folder Include="TagManagement\Requests\" />
+    <Folder Include="TagManagement\Responses\" />
+    <Folder Include="FeedManagement\Requests\" />
+    <Folder Include="FeedManagement\Responses\" />
+    <Folder Include="LivestockManagement\Requests\" />
+    <Folder Include="LivestockManagement\Responses\" />
+  </ItemGroup>
+
 </Project>

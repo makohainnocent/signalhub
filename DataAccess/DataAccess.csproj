@@ -16,4 +16,39 @@
     <ProjectReference Include="..\Application\Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="AquacultureManagement\Exceptions\" />
+    <Folder Include="AquacultureManagement\Repositories\" />
+    <Folder Include="AquacultureManagement\Utilities\" />
+    <Folder Include="ComplianceManagement\Exceptions\" />
+    <Folder Include="ComplianceManagement\Repositories\" />
+    <Folder Include="ComplianceManagement\Utilities\" />
+    <Folder Include="FarmManagement\Exceptions\" />
+    <Folder Include="FarmManagement\Utilities\" />
+    <Folder Include="FeedBussinessManagement\Exceptions\" />
+    <Folder Include="FeedBussinessManagement\Repositories\" />
+    <Folder Include="FeedBussinessManagement\Utilities\" />
+    <Folder Include="FeedManagement\Exceptions\" />
+    <Folder Include="FeedManagement\Repositories\" />
+    <Folder Include="FeedManagement\Utilities\" />
+    <Folder Include="InspectionManagement\Exceptions\" />
+    <Folder Include="InspectionManagement\Repositories\" />
+    <Folder Include="InspectionManagement\Utilities\" />
+    <Folder Include="LivestockManagement\Exceptions\" />
+    <Folder Include="LivestockManagement\Repositories\" />
+    <Folder Include="LivestockManagement\Utilities\" />
+    <Folder Include="PermitManagement\Exceptions\" />
+    <Folder Include="PermitManagement\Repositories\" />
+    <Folder Include="PermitManagement\Utilities\" />
+    <Folder Include="TagManagement\Exceptions\" />
+    <Folder Include="TagManagement\Repositories\" />
+    <Folder Include="TagManagement\Utilities\" />
+    <Folder Include="TransporterManagement\Exceptions\" />
+    <Folder Include="TransporterManagement\Repositories\" />
+    <Folder Include="TransporterManagement\Utilities\" />
+    <Folder Include="VeterinaryManagement\Exceptions\" />
+    <Folder Include="VeterinaryManagement\Repositories\" />
+    <Folder Include="VeterinaryManagement\Utilities\" />
+  </ItemGroup>
+
 </Project>

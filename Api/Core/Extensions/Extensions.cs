@@ -21,6 +21,8 @@ using Serilog;
 using Api.Core.Services;
 using System.Configuration;
 using Microsoft.OpenApi.Models;
+using Application.FarmManagement.Abstractions;
+using DataAccess.FarmManagement.Repositories;
 
 
 
@@ -34,7 +36,7 @@ namespace Api.Core.Extensions
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Animal Tracking API", Version = "v1" });
 
                 // Configure Swagger to use the Authorization header
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -73,6 +75,7 @@ namespace Api.Core.Extensions
 
                     .AddLogging(config => config.AddFluentMigratorConsole());
             builder.Services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
+            builder.Services.AddTransient<IFarmManagementRepository, FarmManagementRepository>();
 
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 

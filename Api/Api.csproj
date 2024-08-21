@@ -34,7 +34,59 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="AquacultureManagement\Controllers\" />
+    <Folder Include="AquacultureManagement\EndPointDefinations\" />
+    <Folder Include="AquacultureManagement\Filters\" />
+    <Folder Include="AquacultureManagement\Utilities\" />
+    <Folder Include="AquacultureManagement\Validators\" />
     <Folder Include="Authentication\Filters\" />
+    <Folder Include="ComplianceManagement\Controllers\" />
+    <Folder Include="ComplianceManagement\EndPointDefinations\" />
+    <Folder Include="ComplianceManagement\Filters\" />
+    <Folder Include="ComplianceManagement\Utilities\" />
+    <Folder Include="ComplianceManagement\Validators\" />
+    <Folder Include="FarmManagement\Filters\" />
+    <Folder Include="FarmManagement\Utilities\" />
+    <Folder Include="FeedBussinessManagement\Controllers\" />
+    <Folder Include="FeedBussinessManagement\EndPointDefinations\" />
+    <Folder Include="FeedBussinessManagement\Filters\" />
+    <Folder Include="FeedBussinessManagement\Utilities\" />
+    <Folder Include="FeedBussinessManagement\Validators\" />
+    <Folder Include="FeedManagement\Controllers\" />
+    <Folder Include="FeedManagement\EndPointDefinations\" />
+    <Folder Include="FeedManagement\Filters\" />
+    <Folder Include="FeedManagement\Utilities\" />
+    <Folder Include="FeedManagement\Validators\" />
+    <Folder Include="InspectionManagement\Controllers\" />
+    <Folder Include="InspectionManagement\EndPointDefinations\" />
+    <Folder Include="InspectionManagement\Filters\" />
+    <Folder Include="InspectionManagement\Utilities\" />
+    <Folder Include="InspectionManagement\Validators\" />
+    <Folder Include="LivestockManagement\Controllers\" />
+    <Folder Include="LivestockManagement\EndPointDefinations\" />
+    <Folder Include="LivestockManagement\Filters\" />
+    <Folder Include="LivestockManagement\Utilities\" />
+    <Folder Include="LivestockManagement\Validators\" />
+    <Folder Include="PermitManagement\Controllers\" />
+    <Folder Include="PermitManagement\EndPointDefinations\" />
+    <Folder Include="PermitManagement\Filters\" />
+    <Folder Include="PermitManagement\Utilities\" />
+    <Folder Include="PermitManagement\Validators\" />
+    <Folder Include="TagManagement\Controllers\" />
+    <Folder Include="TagManagement\EndPointDefinations\" />
+    <Folder Include="TagManagement\Filters\" />
+    <Folder Include="TagManagement\Utilities\" />
+    <Folder Include="TagManagement\Validators\" />
+    <Folder Include="TransporterManagement\Controllers\" />
+    <Folder Include="TransporterManagement\EndPointDefinations\" />
+    <Folder Include="TransporterManagement\Filters\" />
+    <Folder Include="TransporterManagement\Utilities\" />
+    <Folder Include="TransporterManagement\Validators\" />
+    <Folder Include="VeterinaryManagement\Controllers\" />
+    <Folder Include="VeterinaryManagement\EndPointDefinations\" />
+    <Folder Include="VeterinaryManagement\Filters\" />
+    <Folder Include="VeterinaryManagement\Utilities\" />
+    <Folder Include="VeterinaryManagement\Validators\" />
   </ItemGroup>
 
 </Project>

@@ -4,22 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Authentication.Exceptions
+namespace DataAccess.Common.Exceptions
 {
     public class ItemAlreadyExistsException : Exception
     {
-        
+
         public ItemAlreadyExistsException()
         {
         }
 
-        
+
         public ItemAlreadyExistsException(string message)
             : base(message)
         {
         }
 
-        
+
         public ItemAlreadyExistsException(string message, Exception innerException)
             : base(message, innerException)
         {
