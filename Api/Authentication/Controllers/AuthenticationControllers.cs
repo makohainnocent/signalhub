@@ -11,6 +11,7 @@ using Application.Common.Abstractions;
 using System.Security.Claims;
 using Domain.Common;
 using Microsoft.AspNetCore.Http.HttpResults;
+using DataAccess.Common.Exceptions;
 
 namespace Api.Authentication.Controllers
 {
