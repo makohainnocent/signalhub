@@ -62,11 +62,8 @@
     <Folder Include="InspectionManagement\Filters\" />
     <Folder Include="InspectionManagement\Utilities\" />
     <Folder Include="InspectionManagement\Validators\" />
-    <Folder Include="LivestockManagement\Controllers\" />
-    <Folder Include="LivestockManagement\EndPointDefinations\" />
     <Folder Include="LivestockManagement\Filters\" />
     <Folder Include="LivestockManagement\Utilities\" />
-    <Folder Include="LivestockManagement\Validators\" />
     <Folder Include="PermitManagement\Controllers\" />
     <Folder Include="PermitManagement\EndPointDefinations\" />
     <Folder Include="PermitManagement\Filters\" />

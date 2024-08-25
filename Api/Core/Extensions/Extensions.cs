@@ -23,6 +23,8 @@ using System.Configuration;
 using Microsoft.OpenApi.Models;
 using Application.FarmManagement.Abstractions;
 using DataAccess.FarmManagement.Repositories;
+using Application.LivestockManagement.Abstractions;
+using DataAccess.LivestockManagement.Repositories;
 
 
 
@@ -76,6 +78,7 @@ namespace Api.Core.Extensions
                     .AddLogging(config => config.AddFluentMigratorConsole());
             builder.Services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
             builder.Services.AddTransient<IFarmManagementRepository, FarmManagementRepository>();
+            builder.Services.AddTransient<ILivestockManagementRepository, LivestockManagementRepository>();
 
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 

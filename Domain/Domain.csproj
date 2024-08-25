@@ -30,7 +30,6 @@
     <Folder Include="TagManagement\Responses\" />
     <Folder Include="FeedManagement\Requests\" />
     <Folder Include="FeedManagement\Responses\" />
-    <Folder Include="LivestockManagement\Requests\" />
     <Folder Include="LivestockManagement\Responses\" />
   </ItemGroup>
 

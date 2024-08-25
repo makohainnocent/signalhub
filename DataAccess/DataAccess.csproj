@@ -35,7 +35,6 @@
     <Folder Include="InspectionManagement\Repositories\" />
     <Folder Include="InspectionManagement\Utilities\" />
     <Folder Include="LivestockManagement\Exceptions\" />
-    <Folder Include="LivestockManagement\Repositories\" />
     <Folder Include="LivestockManagement\Utilities\" />
     <Folder Include="PermitManagement\Exceptions\" />
     <Folder Include="PermitManagement\Repositories\" />

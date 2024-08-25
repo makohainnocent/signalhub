@@ -16,7 +16,6 @@
     <Folder Include="FeedBussinessManagement\Abstractions\" />
     <Folder Include="FeedManagement\Abstractions\" />
     <Folder Include="InspectionManagement\Abstractions\" />
-    <Folder Include="LivestockManagement\Abstractions\" />
     <Folder Include="PermitManagement\Abstractions\" />
     <Folder Include="TagManagement\Abstractions\" />
     <Folder Include="TransporterManagement\Abstractions\" />

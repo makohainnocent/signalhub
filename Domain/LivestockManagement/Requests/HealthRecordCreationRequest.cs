@@ -4,19 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Core.Models
+namespace Domain.LivestockManagement.Requests
 {
-    public class HealthRecord
+    public class HealthRecordCreationRequest
     {
-        public int HealthRecordId { get; set; }
         public int LivestockId { get; set; }
-        public int UserId { get; set; }
+        public int UserId { get; set; } 
         public DateTime DateOfVisit { get; set; }
         public string Diagnosis { get; set; }
         public string Treatment { get; set; }
         public DateTime FollowUpDate { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
     }
-
 }
