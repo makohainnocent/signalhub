@@ -11,6 +11,7 @@ namespace Domain.FarmManagement.Requests
         public string FarmName { get; set; }
         public string Location { get; set; }
         public decimal Area { get; set; } 
+        public string FarmImage {  get; set; }
     }
 
 }

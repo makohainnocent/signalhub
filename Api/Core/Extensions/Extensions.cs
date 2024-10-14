@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DataAccess.Authentication.Utilities;
-using Api.Core.MiddleWares;
 using Serilog;
 using Api.Core.Services;
 using System.Configuration;
@@ -98,21 +97,68 @@ namespace Api.Core.Extensions
 
             var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
-
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]))
+    };
+
+    // Customize JWT Bearer Events
+    options.Events = new JwtBearerEvents
+    {
+    
+
+        // Handle missing token
+        OnChallenge = context =>
+        {
+            if (!context.Response.HasStarted)
+            {
+                context.HandleResponse(); // Suppress the default response
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+
+                var result = System.Text.Json.JsonSerializer.Serialize(new
                 {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = jwtSettings["Issuer"],
-                        ValidAudience = jwtSettings["Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]))
-                    };
+                    StatusCode = 401,
+                    Message = "Token is required to access this resource."
                 });
+
+                return context.Response.WriteAsync(result);
+            }
+
+            return Task.CompletedTask;
+        },
+
+        // Handle forbidden responses
+        OnForbidden = context =>
+        {
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json";
+
+                var result = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    StatusCode = 403,
+                    Message = "You do not have permission to access this resource."
+                });
+
+                return context.Response.WriteAsync(result);
+            }
+
+            return Task.CompletedTask;
+        }
+    };
+});
+
 
             builder.Services.AddAuthorization(options =>
             {
@@ -169,7 +215,7 @@ namespace Api.Core.Extensions
 
         public static IApplicationBuilder UseExceptionHandlingMiddleware(this IApplicationBuilder builder)
         {
-            return builder.UseMiddleware<ExceptionHandlingMiddleware>();
+            return builder.UseMiddleware<GlobalExceptionHandlingMiddleware>();
         }
     }
 }

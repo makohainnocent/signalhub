@@ -59,8 +59,8 @@ namespace DataAccess.FarmManagement.Repositories
 
                 
                 var insertQuery = @"
-                INSERT INTO [Farm] (UserId, FarmName, Location, Area, CreatedAt, UpdatedAt)
-                VALUES (@UserId, @FarmName, @Location, @Area, @CreatedAt, @UpdatedAt);
+                INSERT INTO [Farm] (UserId, FarmName, Location, Area, CreatedAt, UpdatedAt,FarmImage)
+                VALUES (@UserId, @FarmName, @Location, @Area, @CreatedAt, @UpdatedAt,@FarmImage);
                 SELECT CAST(SCOPE_IDENTITY() as int);";
 
                 
@@ -70,6 +70,7 @@ namespace DataAccess.FarmManagement.Repositories
                     FarmName = request.FarmName,
                     Location = request.Location,
                     Area = request.Area,
+                    FarmImage= request.FarmImage,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -85,6 +86,7 @@ namespace DataAccess.FarmManagement.Repositories
                     FarmName = request.FarmName,
                     Location = request.Location,
                     Area = request.Area,
+                    FarmImage = request.FarmImage,
                     CreatedAt = parameters.CreatedAt,
                     UpdatedAt = parameters.UpdatedAt
                 };
@@ -193,6 +195,7 @@ namespace DataAccess.FarmManagement.Repositories
             SET FarmName = @FarmName,
                 Location = @Location,
                 Area = @Area,
+                FarmImage=@FarmImage,
                 UpdatedAt = @UpdatedAt
             WHERE FarmId = @FarmId";
 
@@ -203,6 +206,7 @@ namespace DataAccess.FarmManagement.Repositories
                     FarmName = request.FarmName,
                     Location = request.Location,
                     Area = request.Area,
+                    FarmImage= request.FarmImage,
                     UpdatedAt = DateTime.UtcNow
                 };
 
@@ -216,6 +220,7 @@ namespace DataAccess.FarmManagement.Repositories
                     FarmName = request.FarmName,
                     Location = request.Location,
                     Area = request.Area,
+                    FarmImage = request.FarmImage,
                     UpdatedAt = parameters.UpdatedAt
                 };
             }
