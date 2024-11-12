@@ -26,5 +26,8 @@ namespace Application.LivestockManagement.Abstractions
         Task<Directive?> GetDirectiveByIdAsync(int directiveId);
         Task<bool> UpdateDirectiveDetailsAsync(int directiveId, string directiveDetails);
         Task<bool> DeleteDirectiveAsync(int directiveId);
+        Task<int> CountLivestockAsync(int? userId = null, int? farmId = null);
+
+        Task<int> CountHealthRecordsAsync(int? userId = null, int? livestockId = null, int? farmId = null);
     }
 }

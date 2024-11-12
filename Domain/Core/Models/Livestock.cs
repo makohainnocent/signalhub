@@ -16,6 +16,7 @@ namespace Domain.Core.Models
         public DateTime DateOfBirth { get; set; }
         public string HealthStatus { get; set; }
         public string IdentificationMark { get; set; }
+        public string AnimalImage { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

@@ -15,6 +15,7 @@ namespace Domain.LivestockManagement.Requests
         public DateTime DateOfBirth { get; set; }
         public string HealthStatus { get; set; }
         public string IdentificationMark { get; set; }
+        public string AnimalImage { get; set; }
     }
 
 }

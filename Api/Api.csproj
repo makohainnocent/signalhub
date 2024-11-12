@@ -45,6 +45,9 @@
     <Folder Include="ComplianceManagement\Filters\" />
     <Folder Include="ComplianceManagement\Utilities\" />
     <Folder Include="ComplianceManagement\Validators\" />
+    <Folder Include="FarmApplication\Filters\" />
+    <Folder Include="FarmApplication\Utilities\" />
+    <Folder Include="FarmApplication\Validators\" />
     <Folder Include="FarmManagement\Filters\" />
     <Folder Include="FarmManagement\Utilities\" />
     <Folder Include="FeedBussinessManagement\Controllers\" />
@@ -57,8 +60,6 @@
     <Folder Include="FeedManagement\Filters\" />
     <Folder Include="FeedManagement\Utilities\" />
     <Folder Include="FeedManagement\Validators\" />
-    <Folder Include="InspectionManagement\Controllers\" />
-    <Folder Include="InspectionManagement\EndPointDefinations\" />
     <Folder Include="InspectionManagement\Filters\" />
     <Folder Include="InspectionManagement\Utilities\" />
     <Folder Include="InspectionManagement\Validators\" />

@@ -24,6 +24,17 @@ using Application.FarmManagement.Abstractions;
 using DataAccess.FarmManagement.Repositories;
 using Application.LivestockManagement.Abstractions;
 using DataAccess.LivestockManagement.Repositories;
+using Application.Application.Abstractions;
+using DataAccess.FarmApplication.Repositories;
+using Application.DocumentManagement.Abstractions;
+using Application.Posts.Abstractions;
+using DataAccess.Posts.Repositories;
+using Application.Vaccinations.Abstractions;
+using DataAccess.Vaccinations.Repositories;
+using Application.Approvals.Abstractions;
+using DataAccess.Approvals.Repositories;
+using Application.InspectionManagement.Abstractions;
+using DataAccess.InspectionManagement.Repositories;
 
 
 
@@ -78,6 +89,12 @@ namespace Api.Core.Extensions
             builder.Services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
             builder.Services.AddTransient<IFarmManagementRepository, FarmManagementRepository>();
             builder.Services.AddTransient<ILivestockManagementRepository, LivestockManagementRepository>();
+            builder.Services.AddTransient<IApplicationRepository, ApplicationRepository>();
+            builder.Services.AddTransient<IDocumentRepository, DocumentRepository>();
+            builder.Services.AddTransient<IPostRepository, PostRepository>();
+            builder.Services.AddTransient<IVaccinationRepository, VaccinationRepository>();
+            builder.Services.AddTransient<IApprovalsRepository, ApprovalRepository>();
+            builder.Services.AddTransient<IInspectionRepository, InspectionRepository>();
 
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 

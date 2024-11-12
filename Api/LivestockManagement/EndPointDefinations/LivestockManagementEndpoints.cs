@@ -49,6 +49,14 @@ namespace Api.LivestockManagement.EndPointDefinations
             //.RequireAuthorization()
             .WithTags("Livestock Management");
 
+            livestock.MapGet("/livestock/count", async (ILivestockManagementRepository repo, int? userId = null, int? farmId = null) =>
+            {
+                return await LivestockManagementControllers.CountLivestock(repo, userId, farmId);
+            })
+            // .RequireAuthorization()  // Uncomment if authorization is required
+           .WithTags("Livestock Management");
+
+
             livestock.MapPut("/livestock/{livestockId}", async (ILivestockManagementRepository repo, int livestockId, [FromBody] LivestockUpdateRequest request, HttpContext httpContext) =>
             {
                 request.LivestockId = livestockId;
@@ -65,12 +73,10 @@ namespace Api.LivestockManagement.EndPointDefinations
             .RequireAuthorization()
             .WithTags("Livestock Management");
 
-            livestock.MapPost("/healthrecords", async (HealthRecordCreationRequest request, ILivestockManagementRepository repo) =>
+            livestock.MapPost("/healthrecords", async (HealthRecordCreationRequest request, ILivestockManagementRepository repo, HttpContext httpContext) =>
             {
-                return await LivestockManagementControllers.CreateHealthRecord(request, repo);
+                return await LivestockManagementControllers.CreateHealthRecord(request, repo, httpContext);
             })
-            //.RequireAuthorization() 
-            .AddEndpointFilter<ValidationFilter<HealthRecordCreationRequest>>()
             .WithTags("Health Record Management");
 
             livestock.MapGet("/healthrecords/{livestockId}", async (ILivestockManagementRepository repo, int livestockId, int pageNumber = 1, int pageSize = 10, string? search = null) =>
@@ -100,6 +106,13 @@ namespace Api.LivestockManagement.EndPointDefinations
             })
             // .RequireAuthorization()
             .WithTags("Health Record Management");
+
+            livestock.MapGet("/healthrecords/count", async (ILivestockManagementRepository repo, int? userId = null, int ? livestockId = null, int ? farmId = null) =>
+            {
+                return await LivestockManagementControllers.CountHealthRecords(repo, userId,livestockId, farmId);
+            })
+          // .RequireAuthorization()  // Uncomment if authorization is required
+          .WithTags("Health Record Management");
 
             livestock.MapPost("/directive", async (ILivestockManagementRepository repo, CreateDirectiveRequest newDirective) =>
             {

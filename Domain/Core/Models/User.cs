@@ -16,6 +16,9 @@ namespace Domain.Core.Models
         public string Address { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastLoginAt { get; set; }
+        public string CoverPhoto { get; set; } // URL or path to the cover photo, can be null
+        public string ProfilePhoto { get; set; } // URL or path to the profile photo, can be null
     }
+
 
 }

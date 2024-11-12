@@ -99,39 +99,35 @@ namespace DataAccess.FarmManagement.Repositories
             {
                 connection.Open();
 
-                
                 var skip = (pageNumber - 1) * pageSize;
 
-                
                 var query = new StringBuilder(@"
-            SELECT *
-            FROM [Farm]
-            WHERE 1=1");
+    SELECT f.*, fg.GeofenceId, fg.Latitude, fg.Longitude, fg.Radius
+    FROM [Farm] f
+    LEFT JOIN [FarmGeofencing] fg ON f.FarmId = fg.FarmId
+    WHERE 1=1");
 
-                
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     query.Append(@"
-                AND (FarmName LIKE @Search
-                OR Location LIKE @Search)");
+        AND (f.FarmName LIKE @Search
+        OR f.Location LIKE @Search)");
                 }
 
-             
                 query.Append(@"
-            ORDER BY FarmName
-            OFFSET @Skip ROWS
-            FETCH NEXT @PageSize ROWS ONLY;
-        
-            SELECT COUNT(*)
-            FROM [Farm]
-            WHERE 1=1");
+    ORDER BY f.FarmName
+    OFFSET @Skip ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
 
-                
+    SELECT COUNT(*)
+    FROM [Farm] f
+    WHERE 1=1");
+
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     query.Append(@"
-                AND (FarmName LIKE @Search
-                OR Location LIKE @Search)");
+        AND (f.FarmName LIKE @Search
+        OR f.Location LIKE @Search)");
                 }
 
                 using (var multi = await connection.QueryMultipleAsync(query.ToString(), new
@@ -141,7 +137,19 @@ namespace DataAccess.FarmManagement.Repositories
                     Search = $"%{search}%"
                 }))
                 {
-                    var farms = multi.Read<Farm>().ToList();
+                    var farms = multi.Read<Farm, FarmGeofencing, Farm>(
+                        (farm, geofencing) =>
+                        {
+                            farm.Geofencings ??= new List<FarmGeofencing>();
+                            if (geofencing != null)
+                            {
+                                farm.Geofencings.Add(geofencing);
+                            }
+                            return farm;
+                        },
+                        splitOn: "GeofenceId"
+                    ).ToList();
+
                     var totalRecords = multi.ReadSingle<int>();
 
                     return new PagedResultResponse<Farm>
@@ -154,6 +162,7 @@ namespace DataAccess.FarmManagement.Repositories
                 }
             }
         }
+
 
         public async Task<Farm?> GetFarmByIdAsync(int farmId)
         {
@@ -176,11 +185,11 @@ namespace DataAccess.FarmManagement.Repositories
             {
                 connection.Open();
 
-                
+                // Check if the farm exists
                 var checkQuery = @"
-            SELECT COUNT(*)
-            FROM [Farm]
-            WHERE FarmId = @FarmId";
+        SELECT COUNT(*)
+        FROM [Farm]
+        WHERE FarmId = @FarmId";
 
                 var exists = await connection.QuerySingleAsync<int>(checkQuery, new { FarmId = request.FarmId });
 
@@ -191,13 +200,13 @@ namespace DataAccess.FarmManagement.Repositories
 
                 // Prepare the SQL query to update the farm
                 var updateQuery = @"
-            UPDATE [Farm]
-            SET FarmName = @FarmName,
-                Location = @Location,
-                Area = @Area,
-                FarmImage=@FarmImage,
-                UpdatedAt = @UpdatedAt
-            WHERE FarmId = @FarmId";
+        UPDATE [Farm]
+        SET FarmName = @FarmName,
+            Location = @Location,
+            Area = @Area,
+            FarmImage = @FarmImage,
+            UpdatedAt = @UpdatedAt
+        WHERE FarmId = @FarmId";
 
                 // Prepare the parameters
                 var parameters = new
@@ -206,25 +215,39 @@ namespace DataAccess.FarmManagement.Repositories
                     FarmName = request.FarmName,
                     Location = request.Location,
                     Area = request.Area,
-                    FarmImage= request.FarmImage,
+                    FarmImage = request.FarmImage,
                     UpdatedAt = DateTime.UtcNow
                 };
 
                 // Execute the update
                 await connection.ExecuteAsync(updateQuery, parameters);
 
-                // Return the updated farm details
-                return new Farm
-                {
-                    FarmId = request.FarmId,
-                    FarmName = request.FarmName,
-                    Location = request.Location,
-                    Area = request.Area,
-                    FarmImage = request.FarmImage,
-                    UpdatedAt = parameters.UpdatedAt
-                };
+                // Retrieve the updated farm details including geofence details
+                var query = @"
+        SELECT f.*, fg.GeofenceId, fg.Latitude, fg.Longitude, fg.Radius
+        FROM [Farm] f
+        LEFT JOIN [FarmGeofencing] fg ON f.FarmId = fg.FarmId
+        WHERE f.FarmId = @FarmId";
+
+                var farm = await connection.QueryAsync<Farm, FarmGeofencing, Farm>(
+                    query,
+                    (f, geofence) =>
+                    {
+                        f.Geofencings ??= new List<FarmGeofencing>();
+                        if (geofence != null)
+                        {
+                            f.Geofencings.Add(geofence);
+                        }
+                        return f;
+                    },
+                    new { FarmId = request.FarmId },
+                    splitOn: "GeofenceId"
+                );
+
+                return farm.FirstOrDefault();
             }
         }
+
 
         public async Task<bool> DeleteFarm(int farmId)
         {

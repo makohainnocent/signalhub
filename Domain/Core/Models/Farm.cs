@@ -17,6 +17,8 @@ namespace Domain.Core.Models
         public DateTime UpdatedAt { get; set; }
         public string FarmImage { get; set; }
 
+        public List<FarmGeofencing> Geofencings { get; set; } = new List<FarmGeofencing>();
+
     }
 
 

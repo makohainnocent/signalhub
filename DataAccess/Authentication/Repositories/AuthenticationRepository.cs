@@ -58,8 +58,8 @@ namespace DataAccess.Authentication.Repositories
 
                 // Prepare the SQL query to insert a new user
                 var insertQuery = @"
-            INSERT INTO [User] (Username, HashedPassword, Email, FullName, Address, CreatedAt, LastLoginAt)
-            VALUES (@Username, @HashedPassword, @Email, @FullName, @Address, @CreatedAt, @LastLoginAt);
+            INSERT INTO [User] (Username, HashedPassword, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt)
+            VALUES (@Username, @HashedPassword, @Email, @FullName, @Address,@CoverPhoto,@ProfilePhoto, @CreatedAt, @LastLoginAt);
             SELECT CAST(SCOPE_IDENTITY() as int);";
 
                 // Prepare the parameters
@@ -70,6 +70,8 @@ namespace DataAccess.Authentication.Repositories
                     Email = request.Email,
                     FullName = request.FullName,
                     Address = request.Address,
+                    CoverPhoto= request.CoverPhoto,
+                    ProfilePhoto= request.ProfilePhoto,
                     CreatedAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow
                 };
@@ -86,6 +88,8 @@ namespace DataAccess.Authentication.Repositories
                     Email = request.Email,
                     FullName = request.FullName,
                     Address = request.Address,
+                    CoverPhoto = request.CoverPhoto,
+                    ProfilePhoto = request.ProfilePhoto,
                     CreatedAt = parameters.CreatedAt,
                     LastLoginAt = parameters.LastLoginAt
                 };
@@ -99,7 +103,7 @@ namespace DataAccess.Authentication.Repositories
                 connection.Open();
 
                 var query = @"
-            SELECT UserId, Username, HashedPassword, Email, FullName, Address, CreatedAt, LastLoginAt
+            SELECT UserId, Username, HashedPassword, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt
             FROM [User]
             WHERE Username = @UsernameOrEmail OR Email = @UsernameOrEmail";
 
@@ -178,7 +182,7 @@ namespace DataAccess.Authentication.Repositories
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
                 const string query = @"
-                    SELECT UserId, Username, HashedPassword, Email, FullName, Address, CreatedAt, LastLoginAt
+                    SELECT UserId, Username, HashedPassword, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt
                     FROM [User]
                     WHERE UserId = @UserId";
 
@@ -355,6 +359,18 @@ namespace DataAccess.Authentication.Repositories
                     parameters.Add("Address", request.Address);
                 }
 
+                if (!string.IsNullOrEmpty(request.CoverPhoto))
+                {
+                    updateFields.Add("CoverPhoto = @CoverPhoto");
+                    parameters.Add("CoverPhoto", request.CoverPhoto);
+                }
+
+                if (!string.IsNullOrEmpty(request.ProfilePhoto))
+                {
+                    updateFields.Add("ProfilePhoto = @ProfilePhoto");
+                    parameters.Add("ProfilePhoto", request.ProfilePhoto);
+                }
+
                 if (updateFields.Count == 0)
                 {
                     return;
@@ -375,7 +391,7 @@ namespace DataAccess.Authentication.Repositories
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
                 const string query = @"
-            SELECT UserId, Username, HashedPassword, Email, FullName, Address, CreatedAt, LastLoginAt
+            SELECT UserId, Username, HashedPassword, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt
             FROM [User]
             WHERE Username = @Username";
 

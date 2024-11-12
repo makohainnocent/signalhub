@@ -239,7 +239,7 @@ namespace Api.Authentication.Controllers
         public static async Task<IResult> GetUserByClaim(IAuthenticationRepository repo, ClaimsPrincipal user)
         {
             var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+            
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
                 return Results.BadRequest(new { message = "User ID not found in claims." });

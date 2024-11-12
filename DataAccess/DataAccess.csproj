@@ -17,6 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="FarmApplication\Exceptions\" />
+    <Folder Include="FarmApplication\Utilities\" />
     <Folder Include="AquacultureManagement\Exceptions\" />
     <Folder Include="AquacultureManagement\Repositories\" />
     <Folder Include="AquacultureManagement\Utilities\" />
@@ -32,7 +34,6 @@
     <Folder Include="FeedManagement\Repositories\" />
     <Folder Include="FeedManagement\Utilities\" />
     <Folder Include="InspectionManagement\Exceptions\" />
-    <Folder Include="InspectionManagement\Repositories\" />
     <Folder Include="InspectionManagement\Utilities\" />
     <Folder Include="LivestockManagement\Exceptions\" />
     <Folder Include="LivestockManagement\Utilities\" />

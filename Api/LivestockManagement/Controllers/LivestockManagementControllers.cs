@@ -2,6 +2,7 @@
 using DataAccess.Common.Exceptions;
 using Domain.Core.Models;
 using Domain.LivestockManagement.Requests;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Security.Claims;
@@ -66,7 +67,33 @@ namespace Api.LivestockManagement.Controllers
             }
         }
 
-        
+        public static async Task<IResult> CountLivestock(
+    ILivestockManagementRepository repo,
+    int? userId = null,
+    int? farmId = null)
+        {
+            try
+            {
+                // Call repository method to get livestock count based on userId or farmId
+                int livestockCount = await repo.CountLivestockAsync(userId, farmId);
+
+                // Check if any livestock records exist
+                if (livestockCount == 0)
+                {
+                    return Results.NotFound(new { message = "No livestock records found for the specified criteria." });
+                }
+
+                return Results.Ok(new { count = livestockCount });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while counting livestock records.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+
+
         public static async Task<IResult> GetLivestockById(ILivestockManagementRepository repo, int livestockId)
         {
             try
@@ -154,17 +181,19 @@ namespace Api.LivestockManagement.Controllers
             }
         }
 
-        public static async Task<IResult> CreateHealthRecord(HealthRecordCreationRequest request, ILivestockManagementRepository repo)
+        public static async Task<IResult> CreateHealthRecord(HealthRecordCreationRequest request, ILivestockManagementRepository repo, HttpContext httpContext)
         {
             try
             {
-                
-                if (request.UserId <= 0)
+                var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                 {
-                    return Results.Json(new { message = "Invalid user ID" }, statusCode: StatusCodes.Status400BadRequest);
+                    return Results.Json(new { message = "You must be logged in to perform this action" }, statusCode: StatusCodes.Status401Unauthorized);
                 }
 
                 Log.Information("Attempting to create health record for user ID: {UserId}", request.UserId);
+
+                request.UserId = userId;
 
                 var createdHealthRecord = await repo.CreateHealthRecordAsync(request);
 
@@ -410,6 +439,31 @@ namespace Api.LivestockManagement.Controllers
             catch (Exception ex)
             {
                 Log.Error(ex, "An error occurred while deleting the directive.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> CountHealthRecords(
+            ILivestockManagementRepository repo, int? userId = null, int? livestockId = null, int? farmId = null)
+
+
+        {
+            try
+            {
+                // Call repository method to get livestock count based on userId or farmId
+                int livestockCount = await repo.CountHealthRecordsAsync(userId,livestockId, farmId);
+
+                // Check if any livestock records exist
+                if (livestockCount == 0)
+                {
+                    return Results.NotFound(new { message = "No health records found for the specified criteria." });
+                }
+
+                return Results.Ok(new { count = livestockCount });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while counting health records.");
                 return Results.Problem(ex.Message);
             }
         }

@@ -12,17 +12,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DocumentManagement\Responses\" />
+    <Folder Include="FarmApplication\Responses\" />
     <Folder Include="AquacultureManagement\Requests\" />
     <Folder Include="AquacultureManagement\Responses\" />
     <Folder Include="ComplianceManagement\Requests\" />
     <Folder Include="ComplianceManagement\Responses\" />
     <Folder Include="FeedBussinessManagement\Requests\" />
     <Folder Include="FeedBussinessManagement\Responses\" />
+    <Folder Include="Post\Responses\" />
     <Folder Include="VeterinaryManagement\Requests\" />
     <Folder Include="VeterinaryManagement\Responses\" />
     <Folder Include="TransporterManagement\Requests\" />
     <Folder Include="TransporterManagement\Responses\" />
-    <Folder Include="InspectionManagement\Requests\" />
     <Folder Include="InspectionManagement\Responses\" />
     <Folder Include="PermitManagement\Requests\" />
     <Folder Include="PermitManagement\Responses\" />

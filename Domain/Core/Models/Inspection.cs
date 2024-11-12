@@ -9,12 +9,12 @@ namespace Domain.Core.Models
     public class Inspection
     {
         public int InspectionId { get; set; }
-        public int LivestockId { get; set; }
         public int UserId { get; set; }
+        public string EntityIds { get; set; }
+        public string EntityType { get; set; }
         public DateTime InspectionDate { get; set; }
         public string Outcome { get; set; }
         public string Notes { get; set; }
-        public DateTime FollowUpDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

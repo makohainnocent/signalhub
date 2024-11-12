@@ -67,8 +67,8 @@ namespace DataAccess.LivestockManagement.Repositories
 
                 // Insert new Livestock record
                 var insertQuery = @"
-                INSERT INTO [Livestock] (UserId, FarmId, Species, Breed, DateOfBirth, HealthStatus, IdentificationMark, CreatedAt, UpdatedAt)
-                VALUES (@UserId, @FarmId, @Species, @Breed, @DateOfBirth, @HealthStatus, @IdentificationMark, @CreatedAt, @UpdatedAt);
+                INSERT INTO [Livestock] (UserId, FarmId, Species, Breed, DateOfBirth, HealthStatus, IdentificationMark,AnimalImage, CreatedAt, UpdatedAt)
+                VALUES (@UserId, @FarmId, @Species, @Breed, @DateOfBirth, @HealthStatus, @IdentificationMark,@AnimalImage, @CreatedAt, @UpdatedAt);
                 SELECT CAST(SCOPE_IDENTITY() as int);";
 
                 var parameters = new
@@ -80,6 +80,7 @@ namespace DataAccess.LivestockManagement.Repositories
                     DateOfBirth = request.DateOfBirth,
                     HealthStatus = request.HealthStatus,
                     IdentificationMark = request.IdentificationMark,
+                    AnimalImage= request.AnimalImage,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -96,6 +97,7 @@ namespace DataAccess.LivestockManagement.Repositories
                     DateOfBirth = request.DateOfBirth,
                     HealthStatus = request.HealthStatus,
                     IdentificationMark = request.IdentificationMark,
+                    AnimalImage=request.AnimalImage,
                     CreatedAt = parameters.CreatedAt,
                     UpdatedAt = parameters.UpdatedAt
                 };
@@ -215,6 +217,7 @@ namespace DataAccess.LivestockManagement.Repositories
                     DateOfBirth = @DateOfBirth,
                     HealthStatus = @HealthStatus,
                     IdentificationMark = @IdentificationMark,
+                    AnimalImage=@AnimalImage,
                     UpdatedAt = @UpdatedAt
                 WHERE LivestockId = @LivestockId AND UserId = @UserId";
 
@@ -226,6 +229,7 @@ namespace DataAccess.LivestockManagement.Repositories
                     request.DateOfBirth,
                     request.HealthStatus,
                     request.IdentificationMark,
+                    request.AnimalImage,
                     request.LivestockId,
                     UpdatedAt = DateTime.UtcNow,
                     UserId = userId
@@ -628,6 +632,80 @@ namespace DataAccess.LivestockManagement.Repositories
                 var result = await connection.ExecuteAsync(query, new { DirectiveId = directiveId });
 
                 return result > 0;
+            }
+        }
+
+        public async Task<int> CountLivestockAsync(int? userId = null, int? farmId = null)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                var query = new StringBuilder(@"
+        SELECT COUNT(*)
+        FROM [Livestock]
+        WHERE 1 = 1");
+
+                // Add conditions only if values are not null or zero
+                if (userId.HasValue && userId.Value != 0)
+                {
+                    query.Append(" AND UserId = @UserId");
+                }
+
+                if (farmId.HasValue && farmId.Value != 0)
+                {
+                    query.Append(" AND FarmId = @FarmId");
+                }
+
+                // Execute the count query with the appropriate parameters
+                var totalRecords = await connection.ExecuteScalarAsync<int>(query.ToString(), new
+                {
+                    UserId = userId,
+                    FarmId = farmId
+                });
+
+                return totalRecords;
+            }
+        }
+
+        public async Task<int> CountHealthRecordsAsync(int? userId = null, int? livestockId = null, int? farmId = null)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                var query = new StringBuilder(@"
+SELECT COUNT(*)
+FROM [HealthRecord] hr
+LEFT JOIN [Livestock] l ON hr.LivestockId = l.LivestockId
+LEFT JOIN [Farm] f ON l.FarmId = f.FarmId
+WHERE 1 = 1");
+
+                // Add conditions for userId, livestockId, and farmId
+                if (userId.HasValue && userId.Value != 0)
+                {
+                    query.Append(" AND hr.UserId = @UserId");
+                }
+
+                if (livestockId.HasValue && livestockId.Value != 0)
+                {
+                    query.Append(" AND hr.LivestockId = @LivestockId");
+                }
+
+                if (farmId.HasValue && farmId.Value != 0)
+                {
+                    query.Append(" AND f.FarmId = @FarmId");
+                }
+
+                // Execute the count query with the appropriate parameters
+                var totalRecords = await connection.ExecuteScalarAsync<int>(query.ToString(), new
+                {
+                    UserId = userId,
+                    LivestockId = livestockId,
+                    FarmId = farmId
+                });
+
+                return totalRecords;
             }
         }
 
