@@ -7,8 +7,8 @@ using Domain.Core.Models;
 using Domain.InspectionManagement.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Api.InspectionManagement.Controllers;
-using Api.LivestockManagement.Controllers;
-using Application.LivestockManagement.Abstractions;
+
+
 
 namespace Api.InspectionManagement.EndPointDefinations
 {
@@ -34,11 +34,34 @@ namespace Api.InspectionManagement.EndPointDefinations
             .RequireAuthorization()
             .WithTags("Inspections");
 
-            inspections.MapGet("/", async (IInspectionRepository repo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, [FromQuery] int? userId = 0) =>
+            inspections.MapGet("/", async (
+                IInspectionRepository repo, 
+                [FromQuery] int pageNumber = 1,
+                [FromQuery] int pageSize = 10,
+                [FromQuery] string? search = null, 
+                [FromQuery] int? userId = 0, 
+                [FromQuery] int? animalId = 0,
+                [FromQuery] int? premiseId = 0,
+                [FromQuery] int? tagId = 0,
+                [FromQuery] int? productId = 0,
+                [FromQuery] int? transportId = 0
+                ) =>
             {
-                return await InspectionsControllers.GetAllInspectionsAsync(repo, pageNumber, pageSize, search,userId);
+                return await InspectionsControllers.GetAllInspectionsAsync
+                (
+                    repo, 
+                    pageNumber, 
+                    pageSize, 
+                    search,
+                    userId,
+                    animalId,
+                    premiseId,
+                    tagId,
+                    productId,
+                    transportId
+                )
+                    ;
             })
-            .RequireAuthorization()
             .WithTags("Inspections");
 
             inspections.MapGet("/{inspectionId}", async (IInspectionRepository repo, int inspectionId) =>
@@ -62,12 +85,46 @@ namespace Api.InspectionManagement.EndPointDefinations
             .RequireAuthorization()
             .WithTags("Inspections");
 
-            inspections.MapGet("/inspections/count", async (IInspectionRepository repo, int? userId = null, int? livestockId = null, int? farmId = null) =>
+            inspections.MapGet("/inspections/count", async (
+                IInspectionRepository repo,
+                 int? userId = 0,
+                int? animalId = 0,
+                int? premiseId = 0,
+                int? tagId = 0,
+                int? productId = 0,
+                int? transportId = 0
+               ) =>
             {
-                return await InspectionsControllers.CountInspections(repo, userId, livestockId, farmId);
+                return await InspectionsControllers.CountInspections(
+                    repo,
+                 userId,
+                    animalId,
+                    premiseId,
+                    tagId,
+                    productId,
+                    transportId
+                    );
             })
          // .RequireAuthorization()  // Uncomment if authorization is required
          .WithTags("Inspections");
+
+            inspections.MapGet("/inspections/compliant-inspections-this-Week", async (IInspectionRepository repo) =>
+            {
+                return await InspectionsControllers.GetCompliantInspectionsThisWeekAsync(repo);
+            })
+            .WithTags("Inspections");
+
+            inspections.MapGet("/inspections/none-compliant-inspections-this-Week", async (IInspectionRepository repo) =>
+            {
+                return await InspectionsControllers.GetNonCompliantInspectionsThisWeekAsync(repo);
+            })
+            .WithTags("Inspections");
+
+            inspections.MapGet("/inspections/total-inspections-this-Week", async (IInspectionRepository repo) =>
+            {
+                return await InspectionsControllers.GetInspectionsThisWeek(repo);
+            })
+            .WithTags("Inspections");
         }
     }
 }

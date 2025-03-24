@@ -7,32 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AfricasTalking.NET" Version="1.2.4" />
     <PackageReference Include="FluentMigrator" Version="5.2.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="DocumentManagement\Responses\" />
-    <Folder Include="FarmApplication\Responses\" />
-    <Folder Include="AquacultureManagement\Requests\" />
-    <Folder Include="AquacultureManagement\Responses\" />
-    <Folder Include="ComplianceManagement\Requests\" />
-    <Folder Include="ComplianceManagement\Responses\" />
-    <Folder Include="FeedBussinessManagement\Requests\" />
-    <Folder Include="FeedBussinessManagement\Responses\" />
-    <Folder Include="Post\Responses\" />
-    <Folder Include="VeterinaryManagement\Requests\" />
-    <Folder Include="VeterinaryManagement\Responses\" />
-    <Folder Include="TransporterManagement\Requests\" />
-    <Folder Include="TransporterManagement\Responses\" />
-    <Folder Include="InspectionManagement\Responses\" />
-    <Folder Include="PermitManagement\Requests\" />
     <Folder Include="PermitManagement\Responses\" />
+    <Folder Include="Post\Responses\" />
+    <Folder Include="PremiseManagement\Responses\" />
+    <Folder Include="Transportation\Response\" />
+    <Folder Include="InspectionManagement\Responses\" />
     <Folder Include="TagManagement\Requests\" />
     <Folder Include="TagManagement\Responses\" />
-    <Folder Include="FeedManagement\Requests\" />
-    <Folder Include="FeedManagement\Responses\" />
-    <Folder Include="LivestockManagement\Responses\" />
+    <Folder Include="AnimalManagement\Responses\" />
   </ItemGroup>
 
 </Project>

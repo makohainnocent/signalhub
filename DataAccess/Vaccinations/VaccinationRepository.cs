@@ -1,4 +1,4 @@
-﻿using Application.Application.Abstractions;
+﻿
 using Application.Common.Abstractions;
 using Dapper;
 using Domain.Vaccinations.Requests;
@@ -89,7 +89,7 @@ namespace DataAccess.Vaccinations.Repositories
             }
         }
 
-        public async Task<PagedResultResponse<Vaccination>> GetAllVaccinationsAsync(int pageNumber, int pageSize,int? farmId = null, int? userId = null, string? search = null)
+        public async Task<PagedResultResponse<Vaccination>> GetAllVaccinationsAsync(int pageNumber, int pageSize,int? farmId = null, int? userId = null, string? search = null,int?livestockId=null)
         {
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
@@ -114,6 +114,11 @@ namespace DataAccess.Vaccinations.Repositories
                     query.Append(" AND UserId = @UserId");
                 }
 
+                if (livestockId.HasValue && livestockId != 0)
+                {
+                    query.Append(" AND LivestockId = @LivestockId");
+                }
+
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     // Search in both VaccineName and Manufacturer fields
@@ -130,9 +135,14 @@ namespace DataAccess.Vaccinations.Repositories
 
 
 
-                if (farmId.HasValue && userId != 0)
+                if (farmId.HasValue && farmId != 0)
                 {
                     query.Append(" AND FarmId = @FarmId");
+                }
+
+                if (livestockId.HasValue && livestockId != 0)
+                {
+                    query.Append(" AND LivestockId = @LivestockId");
                 }
 
                 if (userId.HasValue && userId != 0)
@@ -149,6 +159,7 @@ namespace DataAccess.Vaccinations.Repositories
                 {
                     FarmId = farmId,
                     UserId = userId,
+                    LivestockId = livestockId,
                     Search = $"%{search}%",
                     Skip = skip,
                     PageSize = pageSize

@@ -1,5 +1,5 @@
-﻿using Application.InspectionManagement.Abstractions;
-using Application.LivestockManagement.Abstractions;
+﻿
+using Application.InspectionManagement.Abstractions;
 using Domain.Common.Responses;
 using Domain.Core.Models;
 using Domain.InspectionManagement.Requests;
@@ -36,13 +36,33 @@ namespace Api.InspectionManagement.Controllers
             }
         }
 
-        public static async Task<IResult> GetAllInspectionsAsync(IInspectionRepository repo, int pageNumber, int pageSize, string? search = null,int? userId=0)
+        public static async Task<IResult> GetAllInspectionsAsync(
+            IInspectionRepository repo,
+            int pageNumber, 
+            int pageSize, 
+            string? search = null,
+            int? userId=0,
+             int? animalId = 0,
+                int? premiseId = 0,
+                int? tagId = 0,
+                int? productId = 0,
+                int? transportId = 0)
         {
             try
             {
                 Log.Information("Attempting to retrieve inspections with pagination: Page {PageNumber}, PageSize {PageSize}.", pageNumber, pageSize);
 
-                PagedResultResponse<Inspection> pagedResult = await repo.GetAllInspectionsAsync(pageNumber, pageSize, search,userId);
+                PagedResultResponse<Inspection> pagedResult = await repo.GetAllInspectionsAsync
+                (   pageNumber, 
+                    pageSize, 
+                    search,
+                    userId,
+                    animalId,
+                    premiseId,
+                    tagId,
+                    productId,
+                    transportId
+                );
 
                 if (pagedResult.Items == null || !pagedResult.Items.Any())
                 {
@@ -127,14 +147,28 @@ namespace Api.InspectionManagement.Controllers
         }
 
         public static async Task<IResult> CountInspections(
-            IInspectionRepository repo, int? userId = null, int? livestockId = null, int? farmId = null)
-
+            IInspectionRepository repo,
+             int? userId = 0,
+                int? animalId = 0,
+                int? premiseId = 0,
+                int? tagId = 0,
+                int? productId = 0,
+                int? transportId = 0
+            )
 
         {
             try
             {
                 
-                int count = await repo.CountInspectionsAsync(userId, livestockId, farmId);
+                int count = await repo.CountInspectionsAsync
+                (
+                     userId,
+                    animalId,
+                    premiseId,
+                    tagId,
+                    productId,
+                    transportId
+                 );
 
                 
                 if (count == 0)
@@ -147,6 +181,54 @@ namespace Api.InspectionManagement.Controllers
             catch (Exception ex)
             {
                 Log.Error(ex, "An error occurred while counting inspection records.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> GetInspectionsThisWeek(IInspectionRepository repo)
+
+        {
+            try
+            {
+
+                var result = await repo.GetInspectionsThisWeekAsync();
+
+                return Results.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while getting inspection records.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> GetCompliantInspectionsThisWeekAsync(IInspectionRepository repo)
+
+        {
+            try
+            {
+                var result = await repo.GetCompliantInspectionsThisWeekAsync();
+
+                return Results.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while getting inspection records.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> GetNonCompliantInspectionsThisWeekAsync(IInspectionRepository repo)
+        {
+            try
+            {
+                var result = await repo.GetNonCompliantInspectionsThisWeekAsync();
+
+                return Results.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while getting inspection records.");
                 return Results.Problem(ex.Message);
             }
         }

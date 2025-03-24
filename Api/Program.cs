@@ -1,20 +1,23 @@
 using Api.Core.Extensions;
 using Api.Core.MiddleWares;
-using Asp.Versioning;
-using Asp.Versioning.Builder;
 using FluentMigrator.Runner;
 using Serilog;
 
+// Configure the logger
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
+    .WriteTo.Console() // Log to the console
+    .WriteTo.Seq("http://localhost:5341") // Log to Seq (replace with your Seq server URL)
     .CreateLogger();
 
+// Log an information message
 Log.Information("Starting up");
+
+
 
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-
+    Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
     // Configure CORS
     builder.Services.AddCors(options =>
     {

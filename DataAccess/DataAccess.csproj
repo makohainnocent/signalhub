@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AfricasTalking.NET" Version="1.2.4" />
     <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
   </ItemGroup>
@@ -17,38 +19,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="FarmApplication\Exceptions\" />
-    <Folder Include="FarmApplication\Utilities\" />
-    <Folder Include="AquacultureManagement\Exceptions\" />
-    <Folder Include="AquacultureManagement\Repositories\" />
-    <Folder Include="AquacultureManagement\Utilities\" />
-    <Folder Include="ComplianceManagement\Exceptions\" />
-    <Folder Include="ComplianceManagement\Repositories\" />
-    <Folder Include="ComplianceManagement\Utilities\" />
-    <Folder Include="FarmManagement\Exceptions\" />
-    <Folder Include="FarmManagement\Utilities\" />
-    <Folder Include="FeedBussinessManagement\Exceptions\" />
-    <Folder Include="FeedBussinessManagement\Repositories\" />
-    <Folder Include="FeedBussinessManagement\Utilities\" />
-    <Folder Include="FeedManagement\Exceptions\" />
-    <Folder Include="FeedManagement\Repositories\" />
-    <Folder Include="FeedManagement\Utilities\" />
+    <Folder Include="PermitManagement\Exceptions\" />
+    <Folder Include="PermitManagement\Utilities\" />
+    <Folder Include="PremiseManagement\Exceptions\" />
+    <Folder Include="PremiseManagement\Utilities\" />
     <Folder Include="InspectionManagement\Exceptions\" />
     <Folder Include="InspectionManagement\Utilities\" />
-    <Folder Include="LivestockManagement\Exceptions\" />
-    <Folder Include="LivestockManagement\Utilities\" />
-    <Folder Include="PermitManagement\Exceptions\" />
-    <Folder Include="PermitManagement\Repositories\" />
-    <Folder Include="PermitManagement\Utilities\" />
-    <Folder Include="TagManagement\Exceptions\" />
-    <Folder Include="TagManagement\Repositories\" />
-    <Folder Include="TagManagement\Utilities\" />
-    <Folder Include="TransporterManagement\Exceptions\" />
-    <Folder Include="TransporterManagement\Repositories\" />
-    <Folder Include="TransporterManagement\Utilities\" />
-    <Folder Include="VeterinaryManagement\Exceptions\" />
-    <Folder Include="VeterinaryManagement\Repositories\" />
-    <Folder Include="VeterinaryManagement\Utilities\" />
+    <Folder Include="AnimalManagement\Exceptions\" />
+    <Folder Include="AnimalManagement\Utilities\" />
+    <Folder Include="TagsManagement\Exceptions\" />
+    <Folder Include="TagsManagement\Utilities\" />
   </ItemGroup>
 
 </Project>

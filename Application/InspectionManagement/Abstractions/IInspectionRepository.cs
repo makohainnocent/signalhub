@@ -14,10 +14,32 @@ namespace Application.InspectionManagement.Abstractions
         {
             Task<Inspection> CreateInspectionAsync(CreateInspectionRequest request);
             Task<Inspection?> GetInspectionByIdAsync(int inspectionId);
-            Task<PagedResultResponse<Inspection>> GetAllInspectionsAsync(int pageNumber, int pageSize, string? search = null, int? userId = null);
+        Task<PagedResultResponse<Inspection>> GetAllInspectionsAsync
+             (int pageNumber,
+            int pageSize,
+            string? search = null,
+            int? userId = 0,
+            int? animalId = 0,
+            int? premiseId = 0,
+            int? tagId = 0,
+            int? productId = 0,
+            int? transportId = 0
+
+            );
             Task<Inspection> UpdateInspectionAsync(Inspection inspection);
             Task<bool> DeleteInspectionAsync(int inspectionId);
-            Task<int> CountInspectionsAsync(int? userId = null, int? livestockId = null, int? farmId = null);
+            Task<int> CountInspectionsAsync(
+                int? userId = 0,
+                int? animalId = 0,
+                int? premiseId = 0,
+                int? tagId = 0,
+                int? productId = 0,
+                int? transportId = 0
+
+            );
+            Task<IEnumerable<object>> GetNonCompliantInspectionsThisWeekAsync();
+            Task<IEnumerable<object>> GetInspectionsThisWeekAsync();
+            Task<IEnumerable<object>> GetCompliantInspectionsThisWeekAsync();
         }
     
 }

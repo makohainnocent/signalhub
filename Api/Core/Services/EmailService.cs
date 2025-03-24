@@ -1,44 +1,68 @@
 ﻿using Application.Common.Abstractions;
-using System.Net.Mail;
-using System.Net;
+using Mailjet.Client;
+using Mailjet.Client.TransactionalEmails;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Api.Core.Services
 {
     public class EmailService : IEmailService
     {
-        private readonly string _host;
-        private readonly int _port;
-        private readonly string _username;
-        private readonly string _password;
-        private readonly string _fromEmail;
+        private readonly string _apiKey;
+        private readonly string _apiSecret;
 
-        public EmailService(string host, int port, string username, string password, string fromEmail)
+        public EmailService(IConfiguration configuration)
         {
-            _host = host;
-            _port = port;
-            _username = username;
-            _password = password;
-            _fromEmail = fromEmail;
+            _apiKey = configuration["Mailjet:ApiKey"] ?? throw new ArgumentNullException(nameof(configuration), "Mailjet API Key is missing.");
+            _apiSecret = configuration["Mailjet:ApiSecret"] ?? throw new ArgumentNullException(nameof(configuration), "Mailjet API Secret is missing.");
         }
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        public async Task SendEmailAsync(string email, string subject, string message)
         {
-            using (var client = new SmtpClient(_host, _port))
+            // Validate inputs
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email address cannot be null or empty.", nameof(email));
+            if (string.IsNullOrWhiteSpace(subject))
+                throw new ArgumentException("Subject cannot be null or empty.", nameof(subject));
+            if (string.IsNullOrWhiteSpace(message))
+                throw new ArgumentException("Message cannot be null or empty.", nameof(message));
+
+            // Initialize Mailjet client
+            var client = new MailjetClient(_apiKey, _apiSecret);
+
+            // Create the recipient contact
+            var toContact = new SendContact(email);
+            if (toContact == null)
+                throw new InvalidOperationException("Failed to create SendContact for the recipient.");
+
+            // Create the email message
+            var emailMessage = new TransactionalEmail
             {
-                client.Credentials = new NetworkCredential(_username, _password);
-                client.EnableSsl = true;
+                From = new SendContact("noreply@yourapp.com", "Your App"),
+                To = { toContact },
+                Subject = subject,
+                TextPart = message,
+                HTMLPart = message
+            };
 
-                var mailMessage = new MailMessage
-                {
-                    From = new MailAddress(_fromEmail),
-                    Subject = subject,
-                    Body = body,
-                    IsBodyHtml = true
-                };
+            // Send the email
+            var response = await client.SendTransactionalEmailAsync(emailMessage).ConfigureAwait(false);
 
-                mailMessage.To.Add(toEmail);
+            // Validate the response
+            if (response == null)
+                throw new InvalidOperationException("Mailjet API returned a null response.");
 
-                await client.SendMailAsync(mailMessage);
+            if (response.Messages == null || !response.Messages.Any())
+                throw new InvalidOperationException("Mailjet API returned no messages in the response.");
+
+            // Check for failed messages
+            var failedMessages = response.Messages.Where(msg => msg.Status != "success").ToList();
+            if (failedMessages.Any())
+            {
+                var errorDetails = string.Join(", ", failedMessages.Select(msg => msg.Errors?.FirstOrDefault()?.ErrorMessage ?? "Unknown error"));
+                throw new InvalidOperationException($"Failed to send email. Errors: {errorDetails}");
             }
         }
     }

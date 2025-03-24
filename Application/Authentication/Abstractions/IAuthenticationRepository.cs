@@ -54,7 +54,11 @@ namespace Application.Authentication.Abstractions
         Task<bool> AddClaimToUserAsync(AddClaimToUserRequest request);
         Task<bool> RemoveClaimFromUserAsync(RemoveClaimFromUserRequest request);
         Task<PagedResultResponse<UserClaimResponse>> GetUserClaimsAsync(int pageNumber, int pageSize, string? search = null);
-
+        Task<int> CountRolesWithPendingStatusAsync();
+        Task<int> CountUsersAsync();
+        Task<string> GeneratePasswordResetTokenAsync(string email);
+        Task<bool> ResetPasswordAsync(string email, string token, string newPassword);
+        Task<bool> UpdateUserRoleStatusAsync(int userId, int roleId, string status);
 
     }
 }

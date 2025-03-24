@@ -13,7 +13,7 @@ namespace Application.Vaccinations.Abstractions
     {
         Task<Vaccination> CreateVaccinationAsync(CreateVaccinationRequest request);
         Task<Vaccination?> GetVaccinationByIdAsync(int vaccinationId);
-        Task<PagedResultResponse<Vaccination>> GetAllVaccinationsAsync(int pageNumber, int pageSize,int? farmId = null, int? userId = null, string? search = null);
+        Task<PagedResultResponse<Vaccination>> GetAllVaccinationsAsync(int pageNumber, int pageSize,int? farmId = null, int? userId = null, string? search = null,int? livestockId = null);
         Task<Vaccination> UpdateVaccinationAsync(Vaccination vaccination);
         Task<bool> DeleteVaccinationAsync(int vaccinationId);
         Task<int> CountVaccinationsAsync(int? userId = null, int? farmId = null, int? livestockId = null);

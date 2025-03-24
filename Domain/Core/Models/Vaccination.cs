@@ -12,7 +12,7 @@ namespace Domain.Core.Models
     {
         public class Vaccination
         {
-            public int VaccinationId { get; set; }                // Unique identifier for the vaccination record
+            public int VaccinationId { get; set; }// Unique identifier for the vaccination record
             public int LivestockId { get; set; }
             public int UserId { get; set; }
             public int FarmId { get; set; } // ID of the animal being vaccinated (or user if for humans)

@@ -10,5 +10,6 @@ namespace Domain.Core.Models
     {
         public int RoleId { get; set; }
         public string RoleName { get; set; }
+        public string? Status { get; set; }
     }
 }

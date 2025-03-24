@@ -1,4 +1,4 @@
-﻿using Application.LivestockManagement.Abstractions;
+﻿
 using Application.Vaccinations.Abstractions;
 using Domain.Common.Responses;
 using Domain.Core.Models.Domain.Core.Models;
@@ -36,13 +36,13 @@ namespace Api.Vaccinations.VaccinationsControllers
             }
         }
 
-        public static async Task<IResult> GetAllVaccinationsAsync(IVaccinationRepository repo, int pageNumber, int pageSize, int? farmId = null,int? userId=null ,string? search = null)
+        public static async Task<IResult> GetAllVaccinationsAsync(IVaccinationRepository repo, int pageNumber, int pageSize, int? farmId = null,int? userId=null ,string? search = null, int? livestockId = null)
         {
             try
             {
                 Log.Information("Attempting to retrieve vaccinations with pagination: Page {PageNumber}, PageSize {PageSize}.", pageNumber, pageSize);
 
-                PagedResultResponse<Vaccination> pagedResult = await repo.GetAllVaccinationsAsync(pageNumber, pageSize,farmId,userId, search);
+                PagedResultResponse<Vaccination> pagedResult = await repo.GetAllVaccinationsAsync(pageNumber, pageSize,farmId,userId, search,livestockId);
 
                 if (pagedResult.Items == null || !pagedResult.Items.Any())
                 {

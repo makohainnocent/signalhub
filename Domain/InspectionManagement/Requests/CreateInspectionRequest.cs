@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluentMigrator;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,11 +10,14 @@ namespace Domain.InspectionManagement.Requests
     public class CreateInspectionRequest
     {
         public int UserId { get; set; }
-        public string EntityIds { get; set; }
-        public string EntityType { get; set; }
+        public int InspectorId { get; set; }
+        public string EntityId { get; set; }
+        public string InspectionType { get; set; }
         public DateTime InspectionDate { get; set; }
-        public string Outcome { get; set; }
-        public string Notes { get; set; }
-      
+        public string Status { get; set; }
+        public string Comments { get; set; }
+        public string InspectionReportPdfBase64 { get; set; }
+
     }
 }
+

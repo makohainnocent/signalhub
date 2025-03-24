@@ -18,6 +18,7 @@ using Domain.Core.Models;
 using DataAccess.Authentication.Exceptions;
 using System.Data;
 using Domain.Authentication.Responses;
+using Api.Core.Services;
 
 
 namespace Api.Authentication.EndPointDefinitions
@@ -48,9 +49,9 @@ namespace Api.Authentication.EndPointDefinitions
         //.WithTags("User Management");
 
             // User Login
-        auth.MapPost("/login", async (IAuthenticationRepository repo, [FromBody] UserLoginRequest request, TokenService tokenService) =>
+        auth.MapPost("/login", async (IAuthenticationRepository repo, [FromBody] UserLoginRequest request, TokenService tokenService, NotificationUtilityService notificationUtilityService) =>
         {
-            return await AuthenticationControllers.LoginUser(repo, request, tokenService);
+            return await AuthenticationControllers.LoginUser(repo, request, tokenService, notificationUtilityService);
         })
         .AddEndpointFilter<ValidationFilter<UserLoginRequest>>()
         .AllowAnonymous();
@@ -64,34 +65,7 @@ namespace Api.Authentication.EndPointDefinitions
             .AllowAnonymous();
             //.WithTags("Authentication");
 
-            // Forgot Password
-            auth.MapPost("/forgot-password", async (IAuthenticationRepository repo, [FromBody] ForgotPasswordRequest request, IEmailService emailService) =>
-            {
-                return await AuthenticationControllers.ForgotPassword(repo, request, emailService);
-            })
-            .AddEndpointFilter<ValidationFilter<ForgotPasswordRequest>>()
-            .AllowAnonymous();
-            //.WithTags("Password Management");
-
-            // Reset Password
-            auth.MapPost("/reset-password", async (IAuthenticationRepository repo, [FromBody] ResetPasswordRequest request) =>
-            {
-                return await AuthenticationControllers.ResetPassword(repo, request);
-            })
-            .AddEndpointFilter<ValidationFilter<ResetPasswordRequest>>()
-            .AllowAnonymous();
-            //.WithTags("Password Management");
-
-            // Change Password
-            auth.MapPost("/change-password", async (IAuthenticationRepository repo, [FromBody] ChangePasswordRequest request, ClaimsPrincipal user) =>
-            {
-                var email = user.FindFirst(ClaimTypes.Email)?.Value;
-                return await AuthenticationControllers.ChangePassword(repo, request);
-            })
-            .AddEndpointFilter<ValidationFilter<ChangePasswordRequest>>();
-            //.RequireAuthorization("UserManagement")
-            //.WithTags("Password Management");
-
+         
             // Update User
             auth.MapPost("/update-user", async (IAuthenticationRepository repo, ClaimsPrincipal user, [FromBody] UpdateUserRequest request) =>
             {
@@ -124,6 +98,11 @@ namespace Api.Authentication.EndPointDefinitions
             });
             //.RequireAuthorization("UserManagement")
             //.WithTags("User Management");
+
+            auth.MapGet("/users-count-all", async (IAuthenticationRepository repo) =>
+            {
+                return await AuthenticationControllers.CountUsers(repo);
+            });
 
             // Delete User
             auth.MapDelete("/delete-user/{userId:int}", async (IAuthenticationRepository repo, int userId, HttpContext httpContext) =>
@@ -237,6 +216,11 @@ namespace Api.Authentication.EndPointDefinitions
             //.RequireAuthorization("UserRoleManagement")
             //.WithTags("User Role Management");
 
+            auth.MapGet("/user-roles-pending", async (IAuthenticationRepository repo) =>
+            {
+                return await AuthenticationControllers.CountPendingUserRoles(repo);
+            });
+
             // Role Claim Management
             auth.MapPost("/add-claim-to-role", async (IAuthenticationRepository repo, AddClaimToRoleRequest request) =>
             {
@@ -263,9 +247,74 @@ namespace Api.Authentication.EndPointDefinitions
             {
                 return await AuthenticationControllers.GetRoleClaimsAsync(repo, pageNumber, pageSize, search);
             });
-        //.RequireAuthorization("RoleClaimManagement")
-        //.WithTags("Role Claim Management");
-    }
+            //.RequireAuthorization("RoleClaimManagement")
+            //.WithTags("Role Claim Management");
+
+            auth.MapPost("/request-password-reset", async (IAuthenticationRepository repo, IEmailService emailService, [FromBody] ForgotPasswordRequest request) =>
+            {
+                try
+                {
+                    // Generate a reset token
+                    var token = await repo.GeneratePasswordResetTokenAsync(request.Email);
+
+                    // Send the token to the user's email
+                    await emailService.SendEmailAsync(request.Email, "Password Reset", $"Your password reset token is: {token}");
+
+                    return Results.Ok(new { message = "Password reset token sent to your email." });
+                }
+                catch (UserNotFoundException ex)
+                {
+                    return Results.NotFound(new { message = ex.Message });
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "An error occurred while generating the password reset token.");
+                    return Results.Problem(ex.Message);
+                }
+            })
+            .AllowAnonymous();
+
+
+            auth.MapPost("/reset-password", async (IAuthenticationRepository repo, [FromBody] ResetPasswordRequest request) =>
+            {
+                try
+                {
+                    bool result = await repo.ResetPasswordAsync(request.Email, request.Token, request.NewPassword);
+
+                    if (result)
+                    {
+                        return Results.Ok(new { message = "Password reset successfully." });
+                    }
+                    else
+                    {
+                        return Results.BadRequest(new { message = "Failed to reset password." });
+                    }
+                }
+                catch (UserNotFoundException ex)
+                {
+                    return Results.NotFound(new { message = ex.Message });
+                }
+                catch (InvalidTokenException ex)
+                {
+                    return Results.BadRequest(new { message = ex.Message });
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "An error occurred while resetting the password.");
+                    return Results.Problem(ex.Message);
+                }
+            })
+            .AllowAnonymous();
+
+            auth.MapGet("/change-user-role-staus", async (IAuthenticationRepository repo, int userId, int roleId, string status) =>
+            {
+                return await AuthenticationControllers.UpdateUserRoleStatusAsync(repo, userId, roleId, status);
+            });
+
+
+
+
+        }
 }
 
     

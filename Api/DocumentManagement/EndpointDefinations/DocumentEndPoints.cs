@@ -4,10 +4,7 @@ using Asp.Versioning;
 using Domain.DocumentManagement.Requests;
 using Application.DocumentManagement.Abstractions;
 using Microsoft.AspNetCore.Mvc;
-using Api.DocumentManagement.DocumentManagementControllers;// Ensure this is the correct namespace for the DocumentManagementControllers
-using Domain.Core.Models;
-using Api.LivestockManagement.Controllers;
-using Application.LivestockManagement.Abstractions;
+
 
 namespace Api.DocumentManagement.EndpointDefinitions
 {
@@ -74,9 +71,9 @@ namespace Api.DocumentManagement.EndpointDefinitions
             .RequireAuthorization()
             .WithTags("Documents");
 
-            documents.MapGet("/documents/count", async (IDocumentRepository repo, int? userId = null, int? farmId = null) =>
+            documents.MapGet("/documents/count", async (IDocumentRepository repo, int? userId = null, int? farmId = null, int? livestockId = null) =>
             {
-                return await DocumentManagementControllers.DocumentManagement.CountDocuments(repo, userId, farmId);
+                return await DocumentManagementControllers.DocumentManagement.CountDocuments(repo, userId, farmId, livestockId);
             })
           // .RequireAuthorization()  // Uncomment if authorization is required
           .WithTags("Documents");

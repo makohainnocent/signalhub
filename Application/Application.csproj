@@ -7,18 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Domain\Domain.csproj" />
+    <PackageReference Include="AfricasTalking.NET" Version="1.2.4" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="AquacultureManagement\Abstractions\" />
-    <Folder Include="ComplianceManagement\Abstractions\" />
-    <Folder Include="FeedBussinessManagement\Abstractions\" />
-    <Folder Include="FeedManagement\Abstractions\" />
-    <Folder Include="PermitManagement\Abstractions\" />
-    <Folder Include="TagManagement\Abstractions\" />
-    <Folder Include="TransporterManagement\Abstractions\" />
-    <Folder Include="VeterinaryManagement\Abstractions\" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
 </Project>

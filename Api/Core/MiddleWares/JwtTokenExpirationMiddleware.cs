@@ -52,11 +52,11 @@ namespace Api.Core.MiddleWares
                             if (expirationDate < DateTime.UtcNow)
                             {
                                 // Token is expired
-                                context.Response.StatusCode = 401;
+                                context.Response.StatusCode = 419;
                                 context.Response.ContentType = "application/json";
                                 var result = System.Text.Json.JsonSerializer.Serialize(new
                                 {
-                                    StatusCode = 401,
+                                    StatusCode = 419,
                                     Message = "Your token has expired. Please login again."
                                 });
                                 await context.Response.WriteAsync(result);
@@ -70,11 +70,11 @@ namespace Api.Core.MiddleWares
                         _logger.LogError(ex, "JWT Token validation failed.");
 
                         // Handle token validation failure
-                        context.Response.StatusCode = 401;
+                        context.Response.StatusCode = 419;
                         context.Response.ContentType = "application/json";
                         var result = System.Text.Json.JsonSerializer.Serialize(new
                         {
-                            StatusCode = 401,
+                            StatusCode = 419,
                             Message = "Invalid token. Please provide a valid token."
                         });
                         await context.Response.WriteAsync(result);

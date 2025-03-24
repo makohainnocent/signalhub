@@ -1,22 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Domain.Core.Models
 {
     public class Inspection
     {
-        public int InspectionId { get; set; }
-        public int UserId { get; set; }
-        public string EntityIds { get; set; }
-        public string EntityType { get; set; }
-        public DateTime InspectionDate { get; set; }
-        public string Outcome { get; set; }
-        public string Notes { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public int InspectionId { get; set; } // Auto-incrementing primary key
+        public int InspectorId { get; set; } // Replaces UserId to match "InspectorId"
+        public int EntityId { get; set; } // Entity being inspected
+        public string InspectionType { get; set; } // Type of entity being inspected (e.g., Premise, Product)
+        public DateTime InspectionDate { get; set; } // Date of inspection
+        public string Status { get; set; } // Inspection status (e.g., Pass, Fail, Pending)
+        public string Comments { get; set; } // Optional comments from the inspector
+        public string InspectionReportPdfBase64 { get; set; } // Base64-encoded PDF of the inspection report
+        public DateTime CreatedAt { get; set; } // Timestamp when the inspection was created
+        public DateTime? UpdatedAt { get; set; } // Optional last update timestamp
     }
-
 }

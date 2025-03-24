@@ -4,7 +4,6 @@ using DataAccess.Authentication.Utilities;
 using Domain.Authentication.Requests;
 using Domain.Core.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using Serilog;
 using Api.Authentication.Utilities;
 using Application.Common.Abstractions;
@@ -12,11 +11,16 @@ using System.Security.Claims;
 using Domain.Common;
 using Microsoft.AspNetCore.Http.HttpResults;
 using DataAccess.Common.Exceptions;
+using Api.Core.Services;
+using Application.Notifications.Abstractions;
 
 namespace Api.Authentication.Controllers
 {
     public class AuthenticationControllers
     {
+
+      
+       
         public static async Task<IResult> CreateUser(IAuthenticationRepository repo, UserRegistrationRequest request)
         {
             try
@@ -40,12 +44,17 @@ namespace Api.Authentication.Controllers
             }
         }
 
-        public static async Task<IResult> LoginUser(IAuthenticationRepository repo, UserLoginRequest request, TokenService tokenService)
+        public static async Task<IResult> LoginUser(
+     IAuthenticationRepository repo,
+     UserLoginRequest request,
+     TokenService tokenService,
+     NotificationUtilityService notificationUtilityService) // Method injection
         {
             try
             {
                 Log.Information("Attempting to log in user with username: {Username}", request.UsernameOrEmail);
 
+                // Authenticate the user
                 User user = await repo.LoginUser(request);
 
                 if (user == null)
@@ -54,10 +63,19 @@ namespace Api.Authentication.Controllers
                     return Results.Unauthorized();
                 }
 
+                // Generate tokens
                 var accessToken = await tokenService.GenerateTokenAsync(user.UserId);
                 var refreshToken = await tokenService.GenerateRefreshTokenAsync(user.UserId);
 
                 Log.Information("User logged in successfully with ID: {UserId}", user.UserId);
+
+                // Notify the user that they have been logged in
+                await notificationUtilityService.CreateNotificationAsync(
+                    user.UserId, // User ID
+                    "Login Notification", // Title
+                    "You have successfully logged in." // Message
+                );
+
                 return Results.Ok(new { AccessToken = accessToken, RefreshToken = refreshToken });
             }
             catch (InvalidCredentialsException ex)
@@ -123,61 +141,9 @@ namespace Api.Authentication.Controllers
             }
         }
 
-        public static async Task<IResult> ResetPassword(IAuthenticationRepository repo, Domain.Authentication.Requests.ResetPasswordRequest request)
-        {
-            try
-            {
-                Log.Information("Attempting to reset password for email: {Email}", request.Email);
+       
 
-                
-                bool isValidCode = await repo.ValidateVerificationCode(request.Email, request.Code);
-
-                if (!isValidCode)
-                {
-                    Log.Warning("Invalid verification code for email: {Email}", request.Email);
-                    return Results.Json(new { message = "Invalid verification code" }, statusCode: StatusCodes.Status401Unauthorized);
-                }
-
-                
-                await repo.UpdatePassword(request.Email, request.NewPassword);
-
-                Log.Information("Password reset successfully for email: {Email}", request.Email);
-                return Results.Ok(new { message = "Password reset successfully" });
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "An error occurred during the password reset process.");
-                return Results.Problem(ex.Message);
-            }
-        }
-
-        public static async Task<IResult> ChangePassword(IAuthenticationRepository repo, Domain.Authentication.Requests.ChangePasswordRequest request)
-        {
-            try
-            {
-                Log.Information("Attempting to change password for email: {Email}", request.Email);
-
-                
-                bool isValidOldPassword = await repo.ValidatePassword(request.Email, request.OldPassword);
-
-                if (!isValidOldPassword)
-                {
-                    Log.Warning("Invalid old password for email: {Email}", request.Email);
-                    return Results.Json(new { message = "Invalid old password" }, statusCode: StatusCodes.Status401Unauthorized);
-                }
-
-                
-                await repo.UpdatePassword(request.Email, request.NewPassword);
-
-                Log.Information("Password changed successfully for email: {Email}", request.Email);
-                return Results.Ok(new { message = "Password changed successfully" });
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "An error occurred while changing password.");
-                return Results.Problem(ex.Message);
-            }
-        }
+   
 
         public static async Task<IResult> UpdateUser(IAuthenticationRepository repo, [FromBody] UpdateUserRequest request)
         {
@@ -853,6 +819,70 @@ namespace Api.Authentication.Controllers
                 return Results.Problem(ex.Message);
             }
         }
+
+        public static async Task<IResult> CountPendingUserRoles(IAuthenticationRepository repo)
+        {
+            try
+            {
+
+                int rolesCount = await repo.CountRolesWithPendingStatusAsync();
+
+                
+                if (rolesCount == 0)
+                {
+                    return Results.NotFound(new { message = "No pending roles  found for the specified criteria." });
+                }
+
+                return Results.Ok(new { count = rolesCount });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while counting pending records.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> CountUsers(IAuthenticationRepository repo)
+        {
+            try
+            {
+                int usersCount = await repo.CountUsersAsync();
+
+                if (usersCount == 0)
+                {
+                    return Results.NotFound(new { message = "No users found for the specified criteria." });
+                }
+
+                return Results.Ok(new { count = usersCount });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while counting user records.");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+        public static async Task<IResult> UpdateUserRoleStatusAsync(IAuthenticationRepository repo, int userId, int roleId, string status)
+        {
+            try
+            {
+                var result = await repo.UpdateUserRoleStatusAsync(userId, roleId, status);
+                //if (result)
+                //{
+                //    return Results.NotFound(new { message = "status already up to date" });
+                //}
+
+                return Results.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occured while updating user role status");
+                return Results.Problem(ex.Message);
+            }
+        }
+
+
+
 
 
 

@@ -32,6 +32,6 @@ namespace Application.DocumentManagement.Abstractions
         // Method to delete a document by its ID
         Task<bool> DeleteDocumentAsync(int documentId);
 
-        Task<int> CountDocumentsAsync(int? userId = null, int? farmId = null);
+        Task<int> CountDocumentsAsync(int? userId = null, int? farmId = null, int? livestockId = null);
     }
 }

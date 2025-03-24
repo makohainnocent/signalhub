@@ -57,7 +57,7 @@ public class GlobalExceptionHandlingMiddleware
         {
             StatusCode = 500,
             Message = "An unexpected error occurred. Please try again later.",
-            Detailed = ex.Message // You can remove this in production to avoid exposing sensitive data
+            Detailed = ex.Message 
         });
 
         return context.Response.WriteAsync(result);

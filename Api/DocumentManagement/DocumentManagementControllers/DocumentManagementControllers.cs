@@ -1,5 +1,4 @@
 ﻿using Application.DocumentManagement.Abstractions;
-using Application.LivestockManagement.Abstractions;
 using Domain.Common.Responses;
 using Domain.Core.Models;
 using Domain.DocumentManagement.Requests;
@@ -127,12 +126,12 @@ namespace Api.DocumentManagement.DocumentManagementControllers
                 }
             }
 
-        public static async Task<IResult> CountDocuments(IDocumentRepository repo,int? userId = null,int? farmId = null)
+        public static async Task<IResult> CountDocuments(IDocumentRepository repo,int? userId = null,int? farmId = null, int? livestockId = null)
         {
             try
             {
                 
-                int documentsCount = await repo.CountDocumentsAsync(userId, farmId);
+                int documentsCount = await repo.CountDocumentsAsync(userId, farmId,livestockId);
 
                
                 if (documentsCount == 0)

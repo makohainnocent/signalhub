@@ -30,6 +30,7 @@ namespace DataAccess.Authentication.Repositories
             _dbConnectionProvider = dbConnectionProvider;
         }
 
+
         public async Task<User> CreateUser(UserRegistrationRequest request)
         {
             using (var connection = _dbConnectionProvider.CreateConnection())
@@ -38,9 +39,9 @@ namespace DataAccess.Authentication.Repositories
 
                 // Check if the username or email already exists
                 var checkQuery = @"
-            SELECT COUNT(*)
-            FROM [User]
-            WHERE Username = @Username OR Email = @Email";
+                SELECT COUNT(*)
+                FROM [Users]
+                WHERE Username = @Username OR Email = @Email";
 
                 var existingCount = await connection.QuerySingleAsync<int>(checkQuery, new
                 {
@@ -58,40 +59,68 @@ namespace DataAccess.Authentication.Repositories
 
                 // Prepare the SQL query to insert a new user
                 var insertQuery = @"
-            INSERT INTO [User] (Username, HashedPassword, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt)
-            VALUES (@Username, @HashedPassword, @Email, @FullName, @Address,@CoverPhoto,@ProfilePhoto, @CreatedAt, @LastLoginAt);
-            SELECT CAST(SCOPE_IDENTITY() as int);";
+                INSERT INTO [Users] (
+                    Username, HashedPassword, Salt, Email, FullName, Address, PhoneNumber, Role, 
+                    FailedLoginAttempts, IsLocked, PasswordResetToken, PasswordResetTokenExpiry, 
+                    CreatedAt, UpdatedAt, LastLoginAt, IsDeleted, CreatedBy, CoverPhoto, ProfilePhoto
+                )
+                VALUES (
+                    @Username, @HashedPassword, @Salt, @Email, @FullName, @Address, @PhoneNumber, @Role, 
+                    @FailedLoginAttempts, @IsLocked, @PasswordResetToken, @PasswordResetTokenExpiry, 
+                    @CreatedAt, @UpdatedAt, @LastLoginAt, @IsDeleted, @CreatedBy, @CoverPhoto, @ProfilePhoto
+                );
+                SELECT CAST(SCOPE_IDENTITY() as int);";
 
                 // Prepare the parameters
                 var parameters = new
                 {
                     Username = request.Username,
                     HashedPassword = hashedPassword,
+                    Salt = Guid.NewGuid().ToString("N"), // Generate a new salt
                     Email = request.Email,
                     FullName = request.FullName,
                     Address = request.Address,
-                    CoverPhoto= request.CoverPhoto,
-                    ProfilePhoto= request.ProfilePhoto,
+                    PhoneNumber = request.PhoneNumber,
+                    Role = "User", // Default role
+                    FailedLoginAttempts = 0,
+                    IsLocked = false,
+                    PasswordResetToken = (string)null,
+                    PasswordResetTokenExpiry = (DateTime?)null,
                     CreatedAt = DateTime.UtcNow,
-                    LastLoginAt = DateTime.UtcNow
+                    UpdatedAt = (DateTime?)null,
+                    LastLoginAt = DateTime.UtcNow,
+                    IsDeleted = false,
+                    CreatedBy = (int?)null, // Nullable for self-registered users
+                    CoverPhoto = request.CoverPhoto,
+                    ProfilePhoto = request.ProfilePhoto
                 };
 
                 // Execute the query and get the new user's ID
                 var userId = await connection.QuerySingleAsync<int>(insertQuery, parameters);
-               
+
                 // Return the created user
                 return new User
                 {
                     UserId = userId,
                     Username = request.Username,
                     HashedPassword = hashedPassword,
+                    Salt = parameters.Salt,
                     Email = request.Email,
                     FullName = request.FullName,
                     Address = request.Address,
-                    CoverPhoto = request.CoverPhoto,
-                    ProfilePhoto = request.ProfilePhoto,
+                    PhoneNumber = request.PhoneNumber,
+                    Role = parameters.Role,
+                    FailedLoginAttempts = parameters.FailedLoginAttempts,
+                    IsLocked = parameters.IsLocked,
+                    PasswordResetToken = parameters.PasswordResetToken,
+                    PasswordResetTokenExpiry = parameters.PasswordResetTokenExpiry,
                     CreatedAt = parameters.CreatedAt,
-                    LastLoginAt = parameters.LastLoginAt
+                    UpdatedAt = parameters.UpdatedAt,
+                    LastLoginAt = parameters.LastLoginAt,
+                    IsDeleted = parameters.IsDeleted,
+                    CreatedBy = parameters.CreatedBy,
+                    CoverPhoto = request.CoverPhoto,
+                    ProfilePhoto = request.ProfilePhoto
                 };
             }
         }
@@ -103,37 +132,43 @@ namespace DataAccess.Authentication.Repositories
                 connection.Open();
 
                 var query = @"
-            SELECT UserId, Username, HashedPassword, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt
-            FROM [User]
-            WHERE Username = @UsernameOrEmail OR Email = @UsernameOrEmail";
+                SELECT UserId, Username, HashedPassword, Salt, Email, FullName, Address, PhoneNumber, Role, 
+                       FailedLoginAttempts, IsLocked, PasswordResetToken, PasswordResetTokenExpiry, 
+                       CreatedAt, UpdatedAt, LastLoginAt, IsDeleted, CreatedBy, CoverPhoto, ProfilePhoto
+                FROM [Users]
+                WHERE Username = @UsernameOrEmail OR Email = @UsernameOrEmail";
 
-                
                 var user = await connection.QuerySingleOrDefaultAsync<User>(query, new { UsernameOrEmail = request.UsernameOrEmail });
 
-                
                 if (user == null)
                 {
                     throw new InvalidCredentialsException("Invalid username or email.");
                 }
 
-                
+                // Verify the password
                 bool isPasswordValid = PasswordHasher.VerifyHashedPassword(user.HashedPassword, request.Password);
 
-                
                 if (!isPasswordValid)
                 {
+                    // Increment failed login attempts
+                    var updateFailedAttemptsQuery = @"
+                    UPDATE [Users]
+                    SET FailedLoginAttempts = FailedLoginAttempts + 1
+                    WHERE UserId = @UserId";
+
+                    await connection.ExecuteAsync(updateFailedAttemptsQuery, new { UserId = user.UserId });
+
                     throw new InvalidCredentialsException("Invalid password.");
                 }
 
-                
-                var updateQuery = @"
-            UPDATE [User]
-            SET LastLoginAt = @LastLoginAt
-            WHERE UserId = @UserId";
+                // Reset failed login attempts on successful login
+                var resetFailedAttemptsQuery = @"
+                UPDATE [Users]
+                SET FailedLoginAttempts = 0, LastLoginAt = @LastLoginAt
+                WHERE UserId = @UserId";
 
-                await connection.ExecuteAsync(updateQuery, new { LastLoginAt = DateTime.UtcNow, UserId = user.UserId });
+                await connection.ExecuteAsync(resetFailedAttemptsQuery, new { LastLoginAt = DateTime.UtcNow, UserId = user.UserId });
 
-                
                 return user;
             }
         }
@@ -143,15 +178,54 @@ namespace DataAccess.Authentication.Repositories
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
                 const string query = @"
-                    SELECT r.RoleId, r.RoleName
+                    SELECT r.RoleId, r.RoleName, ur.Status
                     FROM Roles r
                     INNER JOIN UserRoles ur ON r.RoleId = ur.RoleId
-                    WHERE ur.UserId = @UserId";
+                    WHERE ur.UserId = @UserId ORDER BY CreatedAt ASC" ;
 
                 return await connection.QueryAsync<Role>(query, new { UserId = userId });
             }
             
         }
+
+
+        public async Task<int> CountRolesWithPendingStatusAsync()
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Query to count roles with status 'Pending'
+                var query = "SELECT COUNT(*) FROM [UserRoles] WHERE Status = @Status";
+
+                // Execute the query
+                var pendingCount = await connection.ExecuteScalarAsync<int>(query, new
+                {
+                    Status = "Pending"
+                });
+
+                return pendingCount;
+            }
+        }
+
+
+        public async Task<int> CountUsersAsync()
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Query to count all users
+                var query = "SELECT COUNT(*) FROM [Users]";
+
+                // Execute the query and retrieve the count
+                var userCount = await connection.ExecuteScalarAsync<int>(query);
+
+                return userCount;
+            }
+        }
+
+
 
 
         public async Task<IEnumerable<Claim>> GetClaimsByUserIdAsync(int userId)
@@ -182,8 +256,8 @@ namespace DataAccess.Authentication.Repositories
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
                 const string query = @"
-                    SELECT UserId, Username, HashedPassword, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt
-                    FROM [User]
+                    SELECT UserId, Username, HashedPassword,PhoneNumber, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt
+                    FROM [Users]
                     WHERE UserId = @UserId";
 
                     return await connection.QuerySingleOrDefaultAsync<User>(query, new { UserId = userId });
@@ -272,7 +346,7 @@ namespace DataAccess.Authentication.Repositories
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
                 const string query = @"
-                UPDATE [User]
+                UPDATE [Users]
                 SET HashedPassword = @PasswordHash
                 WHERE Email = @Email";
 
@@ -292,7 +366,7 @@ namespace DataAccess.Authentication.Repositories
             {
                 const string query = @"
                 SELECT HashedPassword
-                FROM [User]
+                FROM [Users]
                 WHERE Email = @Email";
 
                 var storedPasswordHash = await connection.QuerySingleOrDefaultAsync<string>(query, new { Email = email });
@@ -315,7 +389,7 @@ namespace DataAccess.Authentication.Repositories
                 
                 var checkQuery = @"
                 SELECT COUNT(*)
-                FROM [User]
+                FROM [Users]
                 WHERE (Username = @Username OR Email = @Email) AND UserId <> @UserId";
 
                 var existingCount = await connection.QuerySingleAsync<int>(checkQuery, new
@@ -359,6 +433,12 @@ namespace DataAccess.Authentication.Repositories
                     parameters.Add("Address", request.Address);
                 }
 
+                if (!string.IsNullOrEmpty(request.PhoneNumber))
+                {
+                    updateFields.Add("PhoneNumber = @PhoneNumber");
+                    parameters.Add("PhoneNumber", request.PhoneNumber);
+                }
+
                 if (!string.IsNullOrEmpty(request.CoverPhoto))
                 {
                     updateFields.Add("CoverPhoto = @CoverPhoto");
@@ -377,7 +457,7 @@ namespace DataAccess.Authentication.Repositories
                 }
 
                 var updateQuery = $@"
-                UPDATE [User]
+                UPDATE [Users]
                 SET {string.Join(", ", updateFields)}
                 WHERE UserId = @UserId";
 
@@ -391,8 +471,8 @@ namespace DataAccess.Authentication.Repositories
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
                 const string query = @"
-            SELECT UserId, Username, HashedPassword, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt
-            FROM [User]
+            SELECT UserId, Username, HashedPassword,PhoneNumber, Email, FullName, Address,CoverPhoto,ProfilePhoto, CreatedAt, LastLoginAt
+            FROM [Users]
             WHERE Username = @Username";
 
                 return await connection.QuerySingleOrDefaultAsync<User>(query, new { Username = username });
@@ -411,7 +491,7 @@ namespace DataAccess.Authentication.Repositories
                 // Define the base query with pagination
                 var query = new StringBuilder(@"
                 SELECT *
-                FROM [User]
+                FROM [Users]
                 WHERE 1=1");
 
                 // Add search condition if search term is provided
@@ -431,7 +511,7 @@ namespace DataAccess.Authentication.Repositories
                 FETCH NEXT @PageSize ROWS ONLY;
     
                 SELECT COUNT(*)
-                FROM [User]
+                FROM [Users]
                 WHERE 1=1");
 
                 // Add search condition to count query if search term is provided
@@ -475,7 +555,7 @@ namespace DataAccess.Authentication.Repositories
 
                 
                 const string query = @"
-                DELETE FROM [User]
+                DELETE FROM [Users]
                 WHERE UserId = @UserId";
 
                 var affectedRows = await connection.ExecuteAsync(query, new { UserId = userId });
@@ -868,7 +948,7 @@ namespace DataAccess.Authentication.Repositories
             {
                 connection.Open();
 
-                const string checkUserQuery = "SELECT COUNT(*) FROM [User] WHERE UserId = @UserId";
+                const string checkUserQuery = "SELECT COUNT(*) FROM [Users] WHERE UserId = @UserId";
                 const string checkRoleQuery = "SELECT COUNT(*) FROM [Roles] WHERE RoleId = @RoleId";
                 const string checkUserRoleQuery = "SELECT COUNT(*) FROM UserRoles WHERE UserId = @UserId AND RoleId = @RoleId";
 
@@ -899,6 +979,38 @@ namespace DataAccess.Authentication.Repositories
                 return true;
             }
         }
+
+        public async Task<bool> UpdateUserRoleStatusAsync(int userId, int roleId, string status)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Check if the role exists for the user
+                const string checkQuery = @"
+        SELECT COUNT(*) 
+        FROM UserRoles 
+        WHERE UserId = @UserId AND RoleId = @RoleId";
+
+                var existingCount = await connection.ExecuteScalarAsync<int>(checkQuery, new { UserId = userId, RoleId = roleId });
+
+                if (existingCount == 0)
+                {
+                    throw new ItemDoesNotExistException($"Role ID {roleId} is not assigned to User ID {userId}.");
+                }
+
+                // Update the Status column for the specified user and role
+                const string updateQuery = @"
+        UPDATE UserRoles 
+        SET Status = @Status
+        WHERE UserId = @UserId AND RoleId = @RoleId";
+
+                var affectedRows = await connection.ExecuteAsync(updateQuery, new { UserId = userId, RoleId = roleId, Status = status });
+
+                return affectedRows > 0;
+            }
+        }
+
 
         public async Task<bool> RemoveRoleFromUserAsync(RemoveRoleFromUserRequest request)
         {
@@ -941,43 +1053,72 @@ namespace DataAccess.Authentication.Repositories
 
                 // Define the base query with pagination
                 var query = new StringBuilder(@"
-                SELECT u.UserId, u.Username, u.Email, r.RoleId, r.RoleName
-                FROM [User] u
-                JOIN UserRoles ur ON u.UserId = ur.UserId
-                JOIN Roles r ON ur.RoleId = r.RoleId
-                WHERE 1=1");
+        WITH LatestUserRoles AS (
+            SELECT 
+                u.UserId, 
+                u.Username, 
+                u.Email, 
+                r.RoleId, 
+                r.RoleName, 
+                ur.CreatedAt, 
+                ur.Status,
+                ROW_NUMBER() OVER (PARTITION BY u.UserId ORDER BY ur.CreatedAt DESC) AS RowNum
+            FROM [Users] u
+            JOIN UserRoles ur ON u.UserId = ur.UserId
+            JOIN Roles r ON ur.RoleId = r.RoleId
+            WHERE 1=1");
 
                 // Add search condition if search term is provided
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     query.Append(@"
-                    AND (u.Username LIKE @Search
-                    OR u.Email LIKE @Search
-                    OR u.FullName LIKE @Search
-                    OR r.RoleName LIKE @Search)");
+            AND (u.Username LIKE @Search
+            OR u.Email LIKE @Search
+            OR u.FullName LIKE @Search
+            OR r.RoleName LIKE @Search
+            OR ur.Status LIKE @Search)");
                 }
 
-                // Add pagination and ordering
                 query.Append(@"
-                ORDER BY u.Username
-                OFFSET @Skip ROWS
-                FETCH NEXT @PageSize ROWS ONLY;
+        )
+        SELECT 
+            UserId, 
+            Username, 
+            Email, 
+            RoleId, 
+            RoleName, 
+            CreatedAt, 
+            Status
+        FROM LatestUserRoles
+        WHERE RowNum = 1
+        ORDER BY CreatedAt DESC, Username DESC
+        OFFSET @Skip ROWS
+        FETCH NEXT @PageSize ROWS ONLY;
 
-                SELECT COUNT(*)
-                FROM [User] u
-                JOIN UserRoles ur ON u.UserId = ur.UserId
-                JOIN Roles r ON ur.RoleId = r.RoleId
-                WHERE 1=1");
+        SELECT COUNT(*)
+        FROM (
+            SELECT 
+                u.UserId, 
+                ROW_NUMBER() OVER (PARTITION BY u.UserId ORDER BY ur.CreatedAt DESC) AS RowNum
+            FROM [Users] u
+            JOIN UserRoles ur ON u.UserId = ur.UserId
+            JOIN Roles r ON ur.RoleId = r.RoleId
+            WHERE 1=1");
 
                 // Add search condition to count query if search term is provided
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     query.Append(@"
-                    AND (u.Username LIKE @Search
-                    OR u.Email LIKE @Search
-                    OR u.FullName LIKE @Search
-                    OR r.RoleName LIKE @Search)");
+            AND (u.Username LIKE @Search
+            OR u.Email LIKE @Search
+            OR u.FullName LIKE @Search
+            OR r.RoleName LIKE @Search
+            OR ur.Status LIKE @Search)");
                 }
+
+                query.Append(@"
+        ) AS LatestUserRoles
+        WHERE RowNum = 1;");
 
                 // Execute the query
                 using (var multi = await connection.QueryMultipleAsync(query.ToString(), new
@@ -1000,7 +1141,6 @@ namespace DataAccess.Authentication.Repositories
                 }
             }
         }
-
         public async Task<bool> AddClaimToRoleAsync(AddClaimToRoleRequest request)
         {
             using (var connection = _dbConnectionProvider.CreateConnection())
@@ -1245,7 +1385,7 @@ namespace DataAccess.Authentication.Repositories
                 connection.Open();
 
                 
-                const string checkUserQuery = "SELECT COUNT(*) FROM [User] WHERE UserId = @UserId";
+                const string checkUserQuery = "SELECT COUNT(*) FROM [Users] WHERE UserId = @UserId";
                 const string checkClaimQuery = "SELECT COUNT(*) FROM [Claims] WHERE ClaimId = @ClaimId";
                 const string checkUserClaimQuery = "SELECT COUNT(*) FROM UserClaims WHERE UserId = @UserId AND ClaimId = @ClaimId";
 
@@ -1284,7 +1424,7 @@ namespace DataAccess.Authentication.Repositories
             {
                 connection.Open();
 
-                const string checkUserQuery = "SELECT COUNT(*) FROM [User] WHERE UserId = @UserId";
+                const string checkUserQuery = "SELECT COUNT(*) FROM [Users] WHERE UserId = @UserId";
                 const string checkClaimQuery = "SELECT COUNT(*) FROM [Claims] WHERE ClaimId = @ClaimId";
                 const string checkUserClaimQuery = "SELECT COUNT(*) FROM UserClaims WHERE UserId = @UserId AND ClaimId = @ClaimId";
 
@@ -1328,7 +1468,7 @@ namespace DataAccess.Authentication.Repositories
                 var query = new StringBuilder(@"
                 SELECT u.UserId, u.Username, c.ClaimId, c.ClaimType, c.ClaimValue
                 FROM UserClaims uc
-                JOIN [User] u ON uc.UserId = u.UserId
+                JOIN [Users] u ON uc.UserId = u.UserId
                 JOIN Claims c ON uc.ClaimId = c.ClaimId
                 WHERE 1=1");
 
@@ -1347,7 +1487,7 @@ namespace DataAccess.Authentication.Repositories
 
                 SELECT COUNT(*)
                 FROM UserClaims uc
-                JOIN [User] u ON uc.UserId = u.UserId
+                JOIN [Users] u ON uc.UserId = u.UserId
                 JOIN Claims c ON uc.ClaimId = c.ClaimId
                 WHERE 1=1");
 
@@ -1380,7 +1520,72 @@ namespace DataAccess.Authentication.Repositories
             }
         }
 
+        public async Task<string> GeneratePasswordResetTokenAsync(string email)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
 
+                // Check if the user exists
+                var user = await connection.QuerySingleOrDefaultAsync<User>(
+                    "SELECT UserId FROM [Users] WHERE Email = @Email",
+                    new { Email = email }
+                );
+
+                if (user == null)
+                {
+                    throw new UserNotFoundException("User not found.");
+                }
+
+                // Generate a unique token
+                var token = Guid.NewGuid().ToString("N"); // Example: "550e8400e29b41d4a716446655440000"
+                var expiryDate = DateTime.UtcNow.AddMinutes(15); // Token expires in 15 minutes
+
+                // Store the token and expiry date in the database
+                await connection.ExecuteAsync(
+                    "UPDATE [Users] SET PasswordResetToken = @Token, PasswordResetTokenExpiry = @ExpiryDate WHERE UserId = @UserId",
+                    new { Token = token, ExpiryDate = expiryDate, UserId = user.UserId }
+                );
+
+                return token;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(string email, string token, string newPassword)
+        {
+            using (var connection = _dbConnectionProvider.CreateConnection())
+            {
+                connection.Open();
+
+                // Check if the user exists
+                var user = await connection.QuerySingleOrDefaultAsync<User>(
+                    "SELECT UserId, PasswordResetToken, PasswordResetTokenExpiry FROM [Users] WHERE Email = @Email",
+                    new { Email = email }
+                );
+
+                if (user == null)
+                {
+                    throw new UserNotFoundException("User not found.");
+                }
+
+                // Validate the token and expiry date
+                if (user.PasswordResetToken != token || user.PasswordResetTokenExpiry < DateTime.UtcNow)
+                {
+                    throw new InvalidTokenException("Invalid or expired token.");
+                }
+
+                // Hash the new password
+                string hashedPassword = PasswordHasher.HashPassword(newPassword);
+
+                // Update the user's password and clear the reset token
+                await connection.ExecuteAsync(
+                    "UPDATE [Users] SET HashedPassword = @HashedPassword, PasswordResetToken = NULL, PasswordResetTokenExpiry = NULL WHERE UserId = @UserId",
+                    new { HashedPassword = hashedPassword, UserId = user.UserId }
+                );
+
+                return true;
+            }
+        }
 
 
 

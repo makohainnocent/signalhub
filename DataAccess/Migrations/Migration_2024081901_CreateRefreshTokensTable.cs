@@ -16,7 +16,7 @@ public class Migration_2024081901_CreateRefreshTokensTable : Migration
 
         Create.ForeignKey("FK_RefreshTokens_Users")
             .FromTable("RefreshTokens").ForeignColumn("UserId")
-            .ToTable("User").PrimaryColumn("UserId");
+            .ToTable("Users").PrimaryColumn("UserId");
     }
 
     public override void Down()

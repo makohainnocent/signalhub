@@ -27,7 +27,7 @@ public class Migration_2024081801_CreateAuthorizationTables : Migration
 
         Create.ForeignKey("FK_UserRoles_Users")
             .FromTable("UserRoles").ForeignColumn("UserId")
-            .ToTable("User").PrimaryColumn("UserId"); // Assuming Users table already exists
+            .ToTable("Users").PrimaryColumn("UserId"); // Assuming Users table already exists
 
         Create.ForeignKey("FK_UserRoles_Roles")
             .FromTable("UserRoles").ForeignColumn("RoleId")
@@ -61,7 +61,7 @@ public class Migration_2024081801_CreateAuthorizationTables : Migration
 
         Create.ForeignKey("FK_UserClaims_Users")
             .FromTable("UserClaims").ForeignColumn("UserId")
-            .ToTable("User").PrimaryColumn("UserId"); // Assuming Users table already exists
+            .ToTable("Users").PrimaryColumn("UserId"); // Assuming Users table already exists
 
         Create.ForeignKey("FK_UserClaims_Claims")
             .FromTable("UserClaims").ForeignColumn("ClaimId")

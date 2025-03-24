@@ -9,7 +9,7 @@ namespace Domain.Core.Models
     public class HealthRecord
     {
         public int HealthRecordId { get; set; }
-        public int LivestockId { get; set; }
+        public int AnimalId { get; set; }
         public int UserId { get; set; }
         public DateTime DateOfVisit { get; set; }
         public string Diagnosis { get; set; }

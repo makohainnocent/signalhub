@@ -1,6 +1,6 @@
-﻿using Application.Application.Abstractions;
+﻿
 using Dapper;
-using Domain.FarmApplication.Requests;
+
 using Domain.Core.Models;
 using Domain.Common.Responses;
 using System;
@@ -100,13 +100,13 @@ namespace DataAccess.FarmApplication.Repositories
                     FROM [Document]
                     WHERE 1=1");
 
-                if (userId!=0)
+                if (userId.HasValue)
                     query.Append(" AND UserId = @UserId");
 
-                if (farmId!=0)
+                if (farmId.HasValue)
                     query.Append(" AND FarmId = @FarmId");
 
-                if (animalId!=0)
+                if (animalId.HasValue)
                     query.Append(" AND AnimalId = @AnimalId");
 
                 if (!string.IsNullOrWhiteSpace(search))
@@ -121,13 +121,13 @@ namespace DataAccess.FarmApplication.Repositories
                     FROM [Document]
                     WHERE 1=1");
 
-                if (userId!=0)
+                if (userId.HasValue)
                     query.Append(" AND UserId = @UserId");
 
-                if (farmId!=0)
+                if (farmId.HasValue)
                     query.Append(" AND FarmId = @FarmId");
 
-                if (animalId!=0)
+                if (animalId.HasValue)
                     query.Append(" AND AnimalId = @AnimalId");
 
                 if (!string.IsNullOrWhiteSpace(search))
@@ -234,7 +234,7 @@ namespace DataAccess.FarmApplication.Repositories
             }
         }
 
-        public async Task<int> CountDocumentsAsync(int? userId = null, int? farmId = null)
+        public async Task<int> CountDocumentsAsync(int? userId = null, int? farmId = null, int? livestockId = null)
         {
             using (var connection = _dbConnectionProvider.CreateConnection())
             {
@@ -256,11 +256,17 @@ namespace DataAccess.FarmApplication.Repositories
                     query.Append(" AND FarmId = @FarmId");
                 }
 
+                if (livestockId.HasValue && livestockId.Value != 0)
+                {
+                    query.Append("AND AnimalId = @AnimalId");
+                }
+
                 // Execute the count query with the appropriate parameters
                 var totalRecords = await connection.ExecuteScalarAsync<int>(query.ToString(), new
                 {
                     UserId = userId,
-                    FarmId = farmId
+                    FarmId = farmId,
+                    AnimalId=livestockId
                 });
 
                 return totalRecords;

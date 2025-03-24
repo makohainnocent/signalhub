@@ -7,10 +7,7 @@ using Domain.Core.Models.Domain.Core.Models;
 using Domain.Vaccinations.Requests;
 using Api.Vaccinations.VaccinationsControllers;
 using Microsoft.AspNetCore.Mvc;
-using Domain.Common.Responses;
-using Api.LivestockManagement.Controllers;
-using Application.LivestockManagement.Abstractions;
-using Domain.Core.Models;
+
 
 namespace Api.Vaccinations.EndPointDefinations
 {
@@ -36,11 +33,10 @@ namespace Api.Vaccinations.EndPointDefinations
             .RequireAuthorization()
             .WithTags("Vaccinations");
                                                                     
-            vaccinations.MapGet("/", async (IVaccinationRepository repo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] int? farmId = null, [FromQuery] int? userId = null, [FromQuery] string? search = null) =>
+            vaccinations.MapGet("/", async (IVaccinationRepository repo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] int? farmId = null, [FromQuery] int? userId = null, [FromQuery] string? search = null, [FromQuery] int? livestockId = null) =>
             {
-                return await VaccinationControllers.GetAllVaccinationsAsync(repo, pageNumber, pageSize,farmId,userId, search);
+                return await VaccinationControllers.GetAllVaccinationsAsync(repo, pageNumber, pageSize,farmId,userId, search,livestockId);
             })
-            .RequireAuthorization()
             .WithTags("Vaccinations");
 
             vaccinations.MapGet("/{vaccinationId}", async (IVaccinationRepository repo, int vaccinationId) =>
