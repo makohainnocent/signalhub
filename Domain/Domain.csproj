@@ -7,22 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="TagManagement\**" />
+    <EmbeddedResource Remove="TagManagement\**" />
+    <None Remove="TagManagement\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AfricasTalking.NET" Version="1.2.4" />
     <PackageReference Include="FluentMigrator" Version="5.2.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="DocumentManagement\Responses\" />
-    <Folder Include="PermitManagement\Responses\" />
-    <Folder Include="Post\Responses\" />
-    <Folder Include="PremiseManagement\Responses\" />
-    <Folder Include="Transportation\Response\" />
-    <Folder Include="InspectionManagement\Responses\" />
-    <Folder Include="TagManagement\Requests\" />
-    <Folder Include="TagManagement\Responses\" />
-    <Folder Include="AnimalManagement\Responses\" />
   </ItemGroup>
 
 </Project>

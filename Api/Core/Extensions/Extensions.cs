@@ -20,35 +20,11 @@ using Serilog;
 using Api.Core.Services;
 using System.Configuration;
 using Microsoft.OpenApi.Models;
-using DataAccess.FarmApplication.Repositories;
-using Application.DocumentManagement.Abstractions;
-using Application.Posts.Abstractions;
-using DataAccess.Posts.Repositories;
-using Application.Vaccinations.Abstractions;
-using DataAccess.Vaccinations.Repositories;
-using Application.Approvals.Abstractions;
-using DataAccess.Approvals.Repositories;
-using Application.InspectionManagement.Abstractions;
-using DataAccess.InspectionManagement.Repositories;
-using Application.PremiseManagement.Abstractions;
-using DataAccess.PremiseManagement.Repositories;
-using Application.AnimalManagement.Abstractions;
-using DataAccess.AnimalManagement.Repositories;
-using DataAccess.PermitManagement.Repositories;
-using Application.TagsManagement.Abstractions;
-using DataAccess.TagsManagement.Repositories;
-using Application.ProductOwnershipTransfers.Abstractions;
-using DataAccess.ProductOwnershipTransfers.Repositories;
 using Application.UserDevices.Abstractions;
 using DataAccess.UserDevices.Repositories;
 using Application.Notifications.Abstractions;
 using DataAccess.Notifications.Repositories;
-using Application.Transportations.Abstractions;
-using DataAccess.Transportations.Repositories;
-using Application.Products.Abstractions;
-using DataAccess.Products.Repositories;
-using DataAccess.PremiseOwners;
-using Application.PremiseOwners.Abstraction;
+
 
 
 
@@ -101,22 +77,10 @@ namespace Api.Core.Extensions
 
                     .AddLogging(config => config.AddFluentMigratorConsole());
             builder.Services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
-            builder.Services.AddTransient<IPremiseManagementRepository, PremiseManagementRepository>();
-            builder.Services.AddTransient<IAnimalManagementRepository, AnimalManagementRepository>();
-            builder.Services.AddTransient<IPermitRepository, PermitRepository>();
-            builder.Services.AddTransient<IDocumentRepository, DocumentRepository>();
-            builder.Services.AddTransient<IPostRepository, PostRepository>();
-            builder.Services.AddTransient<IVaccinationRepository, VaccinationRepository>();
-            builder.Services.AddTransient<IApprovalsRepository, ApprovalRepository>();
-            builder.Services.AddTransient<IInspectionRepository, InspectionRepository>();
-            builder.Services.AddTransient<ITagsManagementRepository, TagsManagementRepository>();
-            builder.Services.AddTransient<IProductOwnershipTransfersRepository, ProductOwnershipTransfersRepository>();
+           
             builder.Services.AddTransient<IUserDevicesRepository, UserDevicesRepository>();
             builder.Services.AddTransient<INotificationsRepository, NotificationsRepository>();
-            builder.Services.AddTransient<ITransportationRepository, TransportationRepository>();
-            builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
-            builder.Services.AddScoped<IPremiseOwnerRepository, PremiseOwnerRepository>();
-            // Register HttpClient
+          
             builder.Services.AddHttpClient<SmsService>();
 
             // Register SmsService

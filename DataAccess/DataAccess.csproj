@@ -18,17 +18,4 @@
     <ProjectReference Include="..\Application\Application.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="PermitManagement\Exceptions\" />
-    <Folder Include="PermitManagement\Utilities\" />
-    <Folder Include="PremiseManagement\Exceptions\" />
-    <Folder Include="PremiseManagement\Utilities\" />
-    <Folder Include="InspectionManagement\Exceptions\" />
-    <Folder Include="InspectionManagement\Utilities\" />
-    <Folder Include="AnimalManagement\Exceptions\" />
-    <Folder Include="AnimalManagement\Utilities\" />
-    <Folder Include="TagsManagement\Exceptions\" />
-    <Folder Include="TagsManagement\Utilities\" />
-  </ItemGroup>
-
 </Project>

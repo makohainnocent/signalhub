@@ -39,19 +39,6 @@
 
   <ItemGroup>
     <Folder Include="Authentication\Filters\" />
-    <Folder Include="PermitManagement\Filters\" />
-    <Folder Include="PermitManagement\Utilities\" />
-    <Folder Include="PermitManagement\Validators\" />
-    <Folder Include="PremiseManagement\Filters\" />
-    <Folder Include="PremiseManagement\Utilities\" />
-    <Folder Include="InspectionManagement\Filters\" />
-    <Folder Include="InspectionManagement\Utilities\" />
-    <Folder Include="InspectionManagement\Validators\" />
-    <Folder Include="AnimalManagement\Filters\" />
-    <Folder Include="AnimalManagement\Utilities\" />
-    <Folder Include="TagsManagement\Filters\" />
-    <Folder Include="TagsManagement\Utilities\" />
-    <Folder Include="TagsManagement\Validators\" />
   </ItemGroup>
 
 </Project>
