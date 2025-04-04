@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.DeliveryLogs.Requests
 {
-    internal class DeliveryLogUpdateRequest
+    public class DeliveryLogUpdateRequest
     {
         public int LogId { get; set; }
         public int DeliveryId { get; set; }
