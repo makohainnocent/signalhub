@@ -8,7 +8,7 @@ using Serilog;
 namespace Api.Tenants.Controllers
 {
     
-    [ApiController]
+   
     public static class TenantsController
     {
         // Create a new tenant

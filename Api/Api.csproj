@@ -39,17 +39,6 @@
 
   <ItemGroup>
     <Folder Include="Authentication\Filters\" />
-    <Folder Include="DeliveryLogs\EndpointDefinations\" />
-    <Folder Include="EventLogs\EndPointDefinations\" />
-    <Folder Include="MessageDelivery\EndPointDefinations\" />
-    <Folder Include="MessageQueues\EndPointDefinations\" />
-    <Folder Include="NotificationRequests\EndPoint\" />
-    <Folder Include="NotificationTemplates\EndPointDefinations\" />
-    <Folder Include="RecipientGroupMembers\EndPointDefinations\" />
-    <Folder Include="RecipientGroups\EndPointDefinations\" />
-    <Folder Include="Recipients\EndPointDefinations\" />
-    <Folder Include="TemplateChannels\EndPointDefinations\" />
-    <Folder Include="Tenants\EndPointDefinations\" />
   </ItemGroup>
 
 </Project>
