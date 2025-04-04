@@ -26,6 +26,10 @@ using Application.Notifications.Abstractions;
 using DataAccess.Notifications.Repositories;
 using DataAccess.DeliveryLogs.Repositories;
 using Application.DeliveryLogs.Abstractions;
+using Application.EventLogs.Abstractions;
+using DataAccess.EventLogs.Repositories;
+using Application.MessageDeliveries.Abstractions;
+using DataAccess.MessageDeliveries.Repositories;
 
 
 
@@ -82,7 +86,9 @@ namespace Api.Core.Extensions
            
             builder.Services.AddTransient<IUserDevicesRepository, UserDevicesRepository>();
             builder.Services.AddTransient<INotificationsRepository, NotificationsRepository>();
-            builder.Services.AddTransient<IDeliveryLogsRepository, DeliveryLogsRepository>(); 
+            builder.Services.AddTransient<IDeliveryLogsRepository, DeliveryLogsRepository>();
+            builder.Services.AddTransient<IEventLogsRepository, EventLogsRepository>();
+            builder.Services.AddTransient<IMessageDeliveriesRepository, MessageDeliveriesRepository>(); 
 
 
             builder.Services.AddHttpClient<SmsService>();

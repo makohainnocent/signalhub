@@ -43,11 +43,11 @@ namespace Application.MessageDeliveries.Abstractions
             string? status = null);
 
         // Analytics
-        Task<DeliveryAnalytics> GetDeliveryAnalyticsAsync(
-            DateTime? startDate = null,
-            DateTime? endDate = null,
-            int? providerId = null,
-            string? channelType = null);
+        //Task<DeliveryAnalytics> GetDeliveryAnalyticsAsync(
+        //    DateTime? startDate = null,
+        //    DateTime? endDate = null,
+        //    int? providerId = null,
+        //    string? channelType = null);
         Task<int> CountDeliveriesByStatusAsync(string status);
         Task<Dictionary<string, int>> GetDeliveryStatusDistributionAsync();
 

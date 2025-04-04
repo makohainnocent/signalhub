@@ -1,6 +1,7 @@
 ﻿using Domain.Common.Responses;
+using Domain.EventLogs;
 using Domain.EventLogs.Requests;
-using System.Diagnostics;
+
 
 
 namespace Application.EventLogs.Abstractions
@@ -11,7 +12,7 @@ namespace Application.EventLogs.Abstractions
         Task<EventLog> LogEventAsync(EventLogCreationRequest request);
         Task<int> BulkLogEventsAsync(IEnumerable<EventLogCreationRequest> events);
 
-        // Event Retrieval
+       
         Task<EventLog?> GetEventByIdAsync(int eventId);
         Task<PagedResultResponse<EventLog>> GetEventsAsync(
             int pageNumber,
@@ -45,9 +46,9 @@ namespace Application.EventLogs.Abstractions
             DateTime? toDate = null);
 
         // System Analytics
-        Task<EventStatistics> GetEventStatisticsAsync(
-            DateTime? startDate = null,
-            DateTime? endDate = null);
+        //Task<EventStatistics> GetEventStatisticsAsync(
+        //    DateTime? startDate = null,
+        //    DateTime? endDate = null);
 
         Task<List<CommonEvent>> GetFrequentEventsAsync(
             TimeSpan period,
