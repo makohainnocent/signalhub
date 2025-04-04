@@ -32,10 +32,9 @@ namespace Application.DeliveryLogs.Abstractions
         Task<DeliveryLog?> GetLastProviderResponseAsync(int deliveryId);
 
         // Analytics
-        Task<DeliveryTimeline> GetDeliveryTimelineAsync(int deliveryId);
+        //Task<DeliveryTimeline> GetDeliveryTimelineAsync(int deliveryId);
         Task<Dictionary<string, int>> GetEventTypeDistributionAsync(
-            int? deliveryId = null,
-            Guid? requestId = null);
+            int? deliveryId = null);
 
         Task<List<CommonError>> GetFrequentErrorsAsync(
             TimeSpan period,
