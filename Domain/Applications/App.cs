@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Applications
 {
-    public class Application
+    public class App
     {
         public int ApplicationId { get; set; }
         public int TenantId { get; set; }
