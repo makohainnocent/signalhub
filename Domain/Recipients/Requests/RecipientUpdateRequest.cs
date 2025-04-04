@@ -8,6 +8,7 @@ namespace Domain.Recipients.Requests
 {
     public class RecipientUpdateRequest
     {
+        public int RecipientId { get; set; }
         public int TenantId { get; set; }
         public string ExternalId { get; set; }
         public string Email { get; set; }

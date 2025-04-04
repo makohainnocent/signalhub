@@ -30,6 +30,15 @@ using Application.EventLogs.Abstractions;
 using DataAccess.EventLogs.Repositories;
 using Application.MessageDeliveries.Abstractions;
 using DataAccess.MessageDeliveries.Repositories;
+using Application.MessageQueue.Abstractions;
+using DataAccess.MessageQueue.Repositories;
+using DataAccess.NotificationRequests.Repositories;
+using Application.NotificationRequests.Abstractions;
+using DataAccess.NotificationTemplates.Repositories;
+using Application.NotificationTemplates.Abstractions;
+using Application.RecipientGroups.Abstractions;
+using Application.Recipients.Abstractions;
+using Application.Tenants.Abtstractions;
 
 
 
@@ -88,7 +97,17 @@ namespace Api.Core.Extensions
             builder.Services.AddTransient<INotificationsRepository, NotificationsRepository>();
             builder.Services.AddTransient<IDeliveryLogsRepository, DeliveryLogsRepository>();
             builder.Services.AddTransient<IEventLogsRepository, EventLogsRepository>();
-            builder.Services.AddTransient<IMessageDeliveriesRepository, MessageDeliveriesRepository>(); 
+            builder.Services.AddTransient<IMessageDeliveriesRepository, MessageDeliveriesRepository>();
+            builder.Services.AddTransient<IMessageQueueRepository, MessageQueueRepository>();
+            builder.Services.AddTransient<INotificationRequestsRepository, NotificationRequestsRepository>();
+            builder.Services.AddTransient<INotificationTemplatesRepository, NotificationTemplatesRepository>();
+            builder.Services.AddTransient<IRecipientGroupMembersRepository, RecipientGroupMembersRepository>();
+            builder.Services.AddTransient<IRecipientGroupsRepository, RecipientGroupsRepository>();
+            builder.Services.AddTransient<IRecipientsRepository, RecipientsRepository>();
+            builder.Services.AddTransient<ITemplateChannelsRepository, TemplateChannelsRepository>();
+            builder.Services.AddTransient<ITenantsRepository, TenantsRepository>(); 
+
+
 
 
             builder.Services.AddHttpClient<SmsService>();
